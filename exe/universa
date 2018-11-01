@@ -1,3 +1,9 @@
 #!/usr/bin/env ruby
 
 require "universa"
+
+
+puts "Checking prerequisites"
+
+puts "Found Unimi version: #{UMI.new.version}"
+

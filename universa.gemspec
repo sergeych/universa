@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["real.sergeych@gmail.com"]
 
   spec.summary       = %q{Expose Universa Java API to ruby}
-  spec.description   = %q{Uses RPC Universa client}
+  spec.description   = %q{Uses UMI Universa client}
   # spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 
@@ -29,6 +29,8 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+
+  spec.add_dependency "farcall", ">= 0.4.6"
 
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"

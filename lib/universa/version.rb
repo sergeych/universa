@@ -1,3 +1,4 @@
 module Universa
-  VERSION = "0.1.0"
+  # Current gem version
+  VERSION = "0.1.1"
 end

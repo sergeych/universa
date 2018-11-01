@@ -1,0 +1,20 @@
+#!/bin/bash
+
+rm download > /dev/null
+
+wget https://files.universa.io/s/ecz6fDT7ny634Xj/download
+
+rm -rd -f ./bin/umi >/dev/null 2>&1
+rm -rd -f ./bin/umi-* >/dev/null 2>&1
+
+echo "preparing..."
+
+unzip download -d ./bin >/dev/null
+
+mv ./bin/umi-* ./bin/umi >/dev/null
+rm -rd ./bin/__MACOSX >/dev/null 2>&1
+
+rm download
+
+echo "done!"
+

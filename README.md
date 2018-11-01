@@ -1,9 +1,9 @@
 # Universa
 
-> This version is a placeholder. It is not yet functional.
+> Alfa state: direct access to Java API ready for test. 
 
 This is an under-construction official gem from [Universa][universa] that will facilitate access to the
-Java library using Universa's RMI protocol.  
+Java library using Universa's UMI protocol.  
 
 ## Installation
 
@@ -29,7 +29,27 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+So far, you can only get direct access the the Java API functions. To get it:
+
+```ruby
+require 'universa'
+
+umi = Universa::UMI.new
+
+p umi.version                                         #=> "0.8.7"
+key = umi.instantiate "PrivateKey", 2048
+contract = umi.instantiate "Contract", key
+sealed = contract.seal()
+puts "Contract is ok: #{contract.check()}"            #=> contract is ok: true"
+puts "Contract id: #{contract.getId.toBase64String}"  #=> contract id: x9Ey+q...
+```
+
+for more information see:
+
+- [Universa gem page](https://kb.universa.io/universa_ruby_gem/131) in the Universa Knowledge Base.
+- Universa Java API: https://kb.universa.io/general_java_api/5 
+- Universa UMI server: https://kb.universa.io/umi_protocol/98
+- Farcall [gem](https://github.com/sergeych/farcall) and [protocol](https://github.com/sergeych/farcall/wiki).
 
 ## Development
 
