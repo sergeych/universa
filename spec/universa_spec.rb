@@ -15,10 +15,6 @@ RSpec.describe Universa do
     expect(Universa::VERSION).not_to be nil
   end
 
-  # it "gets UMI version" do
-  #   @umi.version.should =~ /0\.8\.\d+/
-  # end
-
   it "provides references to universa library objects" do
     i = begin
       key = @umi.instantiate "PrivateKey", 2048

@@ -2,7 +2,7 @@
 
 > Alfa state: direct access to Java API ready for test. 
 
-This is an under-construction official gem from [Universa][universa] that will facilitate access to the
+This is an under-construction official gem from [Universa][universa] to facilitate access to the
 Java library using Universa's UMI protocol.  
 
 ## Installation
@@ -36,12 +36,16 @@ require 'universa'
 
 umi = Universa::UMI.new
 
-p umi.version                                         #=> "0.8.7"
+p umi.version                                         #=> "0.8.8"
 key = umi.instantiate "PrivateKey", 2048
 contract = umi.instantiate "Contract", key
 sealed = contract.seal()
 puts "Contract is ok: #{contract.check()}"            #=> contract is ok: true"
 puts "Contract id: #{contract.getId.toBase64String}"  #=> contract id: x9Ey+q...
+
+# ruby-style snake case could also be used:
+contract_id = contract.get_id.to_base64_string 
+
 ```
 
 for more information see:
