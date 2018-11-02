@@ -62,7 +62,9 @@ module Universa
     # @param [String] path to custom UMI server build. Use bundled one (leave as nil)
     # @param [Regexp] version_check check version against
     # @param [String] system expected on the remote side. 'UMI' us a universa umi server.
-    def initialize(path = nil, version_check: /./, system: "UMI", log: 'sessionlog.txt')
+    # @param [Boolean] convert_case it true, convert ruby style snake case `get_some_stuff()` to java style lower camel
+    #                  case `getSomeStuff()` while calling methods. Does not affect class names on {instantiate}.
+    def initialize(path = nil, version_check: /./, system: "UMI", log: 'sessionlog.txt', convert_case: true)
       path ||= File.expand_path(File.split(__FILE__)[0] + "/../../bin/umi/bin/umi")
       @in, @out, @err, @wtr = Open3.popen3("#{path} #{log ? "-log #{log}" : ''}")
       @endpoint = Farcall::Endpoint.new(
@@ -71,6 +73,7 @@ module Universa
       @lock = Monitor.new
       @cache = {}
       @closed = false
+      @convert_case = convert_case
       @references = {}
       start_cleanup_queue
       @version = call("version")
@@ -81,6 +84,7 @@ module Universa
       raise Error, "missing java binaries"
     end
 
+    # @return version of the connected UMI server. It is different from the gem version.
     def version
       @version.version
     end
@@ -100,6 +104,7 @@ module Universa
     def invoke(ref, method, *args)
       ensure_open
       ref._umi == self or raise InterchangeError
+      @convert_case and method = method.to_s.camelize_lower
       result = call("invoke", ref._remote_id, method, *prepare_args(args))
       encode_result result
     rescue
@@ -119,7 +124,7 @@ module Universa
 
     # short data label for UMI interface
     def inspect
-      "<UniMI:#{__id__}:#{version}>"
+      "<UMI:#{__id__}:#{version}>"
     end
 
     # debug use only. Looks for the cached e.g. (alive) remote object. Does not check
@@ -260,7 +265,7 @@ module Universa
     end
 
     def log msg
-      @trace and puts "UNIMI #{msg}"
+      @trace and puts "UMI #{msg}"
     end
 
   end

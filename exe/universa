@@ -5,5 +5,5 @@ require "universa"
 
 puts "Checking prerequisites"
 
-puts "Found Unimi version: #{UMI.new.version}"
+puts "Found UMI version: #{UMI.new.version}"
 

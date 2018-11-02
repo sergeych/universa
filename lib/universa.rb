@@ -1,4 +1,5 @@
 require "universa/version"
+require "universa/string_utils"
 require "universa/errors"
 require "universa/umi"
 

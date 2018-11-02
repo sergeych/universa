@@ -15,7 +15,7 @@ RSpec.describe Universa do
     expect(Universa::VERSION).not_to be nil
   end
 
-  # it "gets UniMI version" do
+  # it "gets UMI version" do
   #   @umi.version.should =~ /0\.8\.\d+/
   # end
 
@@ -29,6 +29,7 @@ RSpec.describe Universa do
       k3 = contract.getKeysToSignWith()[0]
       address = contract.getKeysToSignWith()[0].getPublicKey().getShortAddress().toString()
       key.getPublicKey().getShortAddress().toString.should == address
+      key.get_public_key.get_short_address.to_string.should == address
       k1.should == key
       k2.should == k1
       k3.should == key
