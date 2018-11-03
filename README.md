@@ -51,11 +51,14 @@ contract_id = contract.get_id.to_base64_string
 
 ```
 
+## Docs and resources
+
 for more information see:
 
 - [Universa gem page](https://kb.universa.io/universa_ruby_gem/131) in the Universa Knowledge Base.
 - Universa Java API: https://kb.universa.io/general_java_api/5 
 - Universa UMI server: https://kb.universa.io/umi_protocol/98
+- Ruby [docs online](https://kb.universa.io/system/static/gem_universa/)
 - Farcall [gem](https://github.com/sergeych/farcall) and [protocol](https://github.com/sergeych/farcall/wiki).
 
 ### Use UMI service (alfa state)
