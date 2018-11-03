@@ -1,6 +1,7 @@
 # Universa
 
-> Alfa state: direct access to Java API ready for test. 
+> Alfa state: direct full access to Java API ready for test, started adapter of remote objects - syntax sugar 
+for direct access to remote objects.
 
 This is an under-construction official gem from [Universa][universa] to facilitate access to the
 Java library using Universa's UMI protocol.  
@@ -63,7 +64,7 @@ The Universa::Service greatly simplify work taking all boilerplate. Just create 
 as is they are local:
 
 ```ruby
-key = PrivateKey,new(open('mykey.private.unikey', 'rb').read)
+key = PrivateKey.new(open('mykey.private.unikey', 'rb').read)
 contract = Contract.new(key)
 
 contract.seal()
