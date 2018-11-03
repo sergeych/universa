@@ -25,6 +25,9 @@ describe Service do
 
       # and restored object should be the same, not just equal: no dup should occur
       key.__id__.should == k1.__id__
+
+      contract.seal()
+      contract.check().should be_truthy
     end
 
     it "compare different by considered equal objects" do

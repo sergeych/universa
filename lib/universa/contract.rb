@@ -7,7 +7,7 @@ module Universa
     # seal the contract
     # @return [String] contract packed to the binary string
     def seal
-      @proxy.seal()
+      super
     end
 
     # returns keys that will be used to sign this contract on next {seal}.
