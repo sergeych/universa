@@ -42,11 +42,11 @@ RSpec.describe Universa do
     key1 = @umi.instantiate( "PrivateKey", 2048)
     key2 = @umi.instantiate( "PrivateKey", key1.pack())
     key1._remote_id.should_not == key2._remote_id
-    @umi.with_trace {
+    # @umi.with_trace {
     key1.should == key2
     key1.should_not === key2
     key1.should === key1
-    }
+    # }
   end
 
 

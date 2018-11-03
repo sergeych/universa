@@ -1,7 +1,11 @@
 require "universa/version"
 require "universa/string_utils"
 require "universa/errors"
+require "universa/tools"
 require "universa/umi"
+require "universa/service"
+require "universa/keys"
+require "universa/contract"
 
 # The Universa gem
 #

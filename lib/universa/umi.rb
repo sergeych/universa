@@ -64,7 +64,7 @@ module Universa
     # @param [String] system expected on the remote side. 'UMI' us a universa umi server.
     # @param [Boolean] convert_case it true, convert ruby style snake case `get_some_stuff()` to java style lower camel
     #                  case `getSomeStuff()` while calling methods. Does not affect class names on {instantiate}.
-    def initialize(path = nil, version_check: /./, system: "UMI", log: 'sessionlog.txt', convert_case: true)
+    def initialize(path = nil, version_check: /./, system: "UMI", log: 'sessionlog.txt', convert_case: true, factory: nil)
       path ||= File.expand_path(File.split(__FILE__)[0] + "/../../bin/umi/bin/umi")
       @in, @out, @err, @wtr = Open3.popen3("#{path} #{log ? "-log #{log}" : ''}")
       @endpoint = Farcall::Endpoint.new(
@@ -73,7 +73,7 @@ module Universa
       @lock = Monitor.new
       @cache = {}
       @closed = false
-      @convert_case = convert_case
+      @convert_case, @factory = convert_case, factory
       @references = {}
       start_cleanup_queue
       @version = call("version")
@@ -95,9 +95,9 @@ module Universa
     # housekeeping required, like memory leaks prevention and direct method calling.
     #
     # @return [Ref] reference to the remotely created object. See {Ref}.
-    def instantiate(object_class_name, *args)
+    def instantiate(object_class_name, *args, adapter: nil)
       ensure_open
-      create_reference call("instantiate", object_class_name, *prepare_args(args))
+      create_reference call("instantiate", object_class_name, *prepare_args(args)), adapter
     end
 
     # Invoke method by name. Should not be used directly; use {Ref} instance to call its methods.
@@ -163,8 +163,9 @@ module Universa
 
     # Create a reference correcting adapting remote types to ruby ecosystem, for example loads
     # remote Java Set to a local ruby Set.
-    def create_reference reference_record
-      r = build_reference reference_record
+    def create_reference(reference_record, adapter = nil)
+      r = build_reference reference_record, adapter
+      return r if adapter
       case reference_record.className
         when 'java.util.HashSet'
           r.toArray()
@@ -175,16 +176,31 @@ module Universa
 
     # Create a reference from UMI remote object reference structure. Returns existing object if any. Takes care
     # of dropping remote object when ruby object gets collected.
-    def build_reference reference_record
+    def build_reference(reference_record, proxy)
       @lock.synchronize {
         remote_id = reference_record.id
         ref = @cache[remote_id]&.get
         if !ref
           # log "Creating new reference to remote #{remote_id}"
           ref = Ref.new(self, reference_record)
-          ObjectSpace.define_finalizer(ref, create_finalizer(remote_id))
-          @cache[remote_id] = WeakReference.new(ref)
+          # IF we provide proxy that will consume the ref, we'll cache the proxy object,
+          # otherwise we run factory and cahce whatever it returns or the ref itself
+          obj = if proxy
+                  # Proxy object will delegate the ref we return from there
+                  # no action need
+                  proxy
+                else
+                  # new object: factory may create proxy for us and we'll cache it for later
+                  # use:
+                  @factory and ref = @factory.call(ref)
+                  ref
+                end
+          # Important: we set finalizer fot the target object
+          ObjectSpace.define_finalizer(obj, create_finalizer(remote_id))
+          # and we cache target object
+          @cache[remote_id] = WeakReference.new(obj)
         end
+        # but we return reference: it the proxy constructor calls us, it'll need the ref:
         ref
       }
     end
@@ -334,9 +350,14 @@ module Universa
       @id
     end
 
+    # name of the remote class (provided by remote)
+    def _remote_class_name
+      @ref.className
+    end
+
     # Internal use only. Allow processing remote commands as local calls
     def respond_to_missing?(method_name, include_private = false)
-      method_name[0] == '_' ? super : true
+      method_name[0] == '_' || LOCAL_METHODS.include?(method_name) ? super : true
     end
 
     #Internal use only. Call remote method as needed. This is where all the magick comes from: it call remote method instead of the
@@ -357,13 +378,13 @@ module Universa
 
     # short data label for instance
     def inspect
-      "<UMI:Ref:#{@umi.__id__}:#{@ref.className}:#{@id})>"
+      "<UMI:Ref:#{@umi.__id__}:#{@ref.className}:#{@id}>"
     end
 
     # Checks that references are euqal: either both point to the same remote object or respective remote objects
     # are reported equals by the remote +equals()+ call.
     def ==(other)
-      other.is_a?(Ref) && other._umi == @umi &&
+      (other.is_a?(Ref) || other.is_a?(RemoteAdapter)) && other._umi == @umi &&
           (other._remote_id == @id || other.equals(self))
     end
 
@@ -373,6 +394,24 @@ module Universa
       other.is_a?(Ref) && other._umi == @umi && other._remote_id == @id
     end
 
+    private
+
+    LOCAL_METHODS = Set.new(%i[i_respond_to_everything_so_im_not_really_a_matcher to_hash to_ary description])
+  end
+
+  # Service uses this class to contruct {RemoteAdapter} pointing to the existing remote object instead
+  # of instantiating new one.
+  #
+  class ReferenceCreationData
+    # reference to create proxy for
+    # @return [Ref]
+    attr :ref
+
+    # we need to wrap this ref
+    # @param [Ref] ref to wrap in {RemoteAdapter}
+    def initialize ref
+      @ref = ref
+    end
   end
 
 end

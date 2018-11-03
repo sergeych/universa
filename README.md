@@ -29,6 +29,8 @@ Or install it yourself as:
 
 ## Usage
 
+### Direct access to UMI 
+ 
 So far, you can only get direct access the the Java API functions. To get it:
 
 ```ruby
@@ -54,6 +56,22 @@ for more information see:
 - Universa Java API: https://kb.universa.io/general_java_api/5 
 - Universa UMI server: https://kb.universa.io/umi_protocol/98
 - Farcall [gem](https://github.com/sergeych/farcall) and [protocol](https://github.com/sergeych/farcall/wiki).
+
+### Use UMI service (alfa state)
+
+The Universa::Service greatly simplify work taking all boilerplate. Just create objects almost as usual and use them
+as is they are local:
+
+```ruby
+key = PrivateKey,new(open('mykey.private.unikey', 'rb').read)
+contract = Contract.new(key)
+
+contract.seal()
+p contract.check()
+```
+
+The system will create UMI server and do all the work for you. Look at the RemoteAdapter class to see how does it
+work. Soon we'll add adapters for all frequently used Universa classes.
 
 ## Development
 
