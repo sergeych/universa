@@ -137,8 +137,9 @@ module Universa
     # These calls could be nested, on exit it restores previous trace state
     def with_trace &block
       current_state, @trace = @trace, true
-      block.call()
+      result = block.call()
       @trace = current_state
+      result
     end
 
     private

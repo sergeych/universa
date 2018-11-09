@@ -6,6 +6,7 @@ require "universa/umi"
 require "universa/service"
 require "universa/keys"
 require "universa/contract"
+require "universa/client"
 
 # The Universa gem
 #

@@ -1,12 +1,12 @@
 describe Service do
 
-  it "should have single instance" do
-    Service.instance.should_not be_nil
-    Service.configure {|cfg|
-      cfg.path.should be_nil
-    }
-    Service.umi.should be_instance_of(UMI)
-  end
+  # it "should have single instance" do
+  #   Service.instance.should_not be_nil
+  #   Service.configure {|cfg|
+  #     cfg.path.should be_nil
+  #   }
+  #   Service.umi.should be_instance_of(UMI)
+  # end
 
   context "when created" do
 

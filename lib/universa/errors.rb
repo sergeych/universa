@@ -4,6 +4,10 @@ module Universa
   class Error < IOError
   end
 
+  # Genegal error with universa network
+  class NetworkError < Error
+  end
+
   # references from different {UMI} instances are mixed together
   class InterchangeError < Error
     # create instance optionally overriding message
