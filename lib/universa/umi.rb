@@ -1,5 +1,6 @@
 require 'open3'
 require 'farcall'
+require 'set'
 require 'base64'
 require 'weakref'
 require_relative 'weak_reference'

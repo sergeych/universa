@@ -12,9 +12,10 @@ module Universa
 
     # returns keys that will be used to sign this contract on next {seal}.
     # @return [Set<PrivateKey>] set of private keys
-    def signing_keys
+    def keys_to_sign_with
       get_keys_to_sign_with
     end
+
   end
 
 end

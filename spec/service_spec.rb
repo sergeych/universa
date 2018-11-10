@@ -13,8 +13,8 @@ describe Service do
     it "create and restore proxy objects" do
       key = PrivateKey.new 2048
       contract = Contract.new(key)
-      k1 = contract.signing_keys[0]
-      k2 = contract.signing_keys[0]
+      k1 = contract.keys_to_sign_with[0]
+      k2 = contract.keys_to_sign_with[0]
       key.should == k1
       k1.should == k2
 
