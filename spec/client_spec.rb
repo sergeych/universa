@@ -7,7 +7,8 @@ describe Client do
 
   it "scans the network" do
     client = Client.new
-    @client.size.should > 30
+    client.size.should > 30
     client.random_connection.ping.sping.should == 'spong'
+    client.random_connection.execute("sping").sping.should == 'spong'
   end
 end

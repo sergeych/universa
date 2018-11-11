@@ -119,13 +119,13 @@ module Universa
     #
     # @return [String] remote class name
     def self.remote_class_name
-      raise Error, "provde remote class name"
+      @remote_class_name or raise Error, "provde remote class name"
     end
 
     # Registers remote class name to be used with this adapted. Call it early in descendant class
     # declaration.
     def self.remote_class name
-      class_eval "def self.remote_class_name; '#{name}'; end"
+      @remote_class_name = name
     end
 
     # debugging label

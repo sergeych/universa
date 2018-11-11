@@ -131,9 +131,6 @@ module Universa
                   .transform_values!(&:sort)
       # We roughly assume the full network size as:
       network_max_size = nodes.size
-      nodes.each {|k, v|
-        puts "#{k}: (#{v.size}) #{v.map(&:rate)}}"
-      }
       # Refine result: takes most voted nodes and only these with 80% consensus
       # and map it to Connection objects
       min_rate = n * 0.8
@@ -206,9 +203,7 @@ module Universa
     # @param [String|Symbol] name of the command
     # @return [SmartHash] with the command result
     def execute name, **kwargs
-      Service.umi.with_trace {
-        connection.command name.to_s, *kwargs.to_a.flatten
-      }
+      connection.command name.to_s, *kwargs.to_a.flatten
     end
 
     protected
