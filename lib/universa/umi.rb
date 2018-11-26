@@ -106,10 +106,13 @@ module Universa
       ensure_open
       ref._umi == self or raise InterchangeError
       @convert_case and method = method.to_s.camelize_lower
+      # p ["invoke", ref._remote_id, method, *prepare_args(args)]
       result = call("invoke", ref._remote_id, method, *prepare_args(args))
       encode_result result
-    rescue
-      $!.print_stack_trace
+    end
+
+    def invoke_static(class_name, method, *args)
+      encode_result call("invoke", class_name, method, *prepare_args(args))
     end
 
     # Close child process. No remote calls should occur after it.
@@ -236,6 +239,8 @@ module Universa
           x._as_umi_arg(self)
         else
           case x
+            when Time
+              { __type: 'unixtime', seconds: x.to_i}
             when String
               x.encoding == Encoding::BINARY ? {__type: 'binary', base64: Base64.encode64(x)} : x
             else
@@ -280,6 +285,13 @@ module Universa
       result = @endpoint.sync_call(command, *args, **EMPTY_KWARGS)
       log "<< #{result}"
       result
+    rescue Farcall::RemoteError => e
+      case e.remote_class
+        when 'NoSuchMethodException'
+          raise NoMethodError, e.message
+        else
+          raise
+      end
     end
 
     def log msg
@@ -362,7 +374,7 @@ module Universa
       method_name[0] == '_' || LOCAL_METHODS.include?(method_name) ? super : true
     end
 
-    #Internal use only. Call remote method as needed. This is where all the magick comes from: it call remote method instead of the
+    # Internal use only. Call remote method as needed. This is where all the magick comes from: it call remote method instead of the
     # local one, exactly like it is local.
     def method_missing(method_name, *args, &block)
       if method_name[0] == '_'

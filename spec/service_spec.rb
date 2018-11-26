@@ -43,5 +43,18 @@ describe Service do
 
   end
 
+  # context "default wallet" do
+  #
+  #   before :all do
+  #
+  #     skip "create default wallet"
+  #   end
+  #
+  #   it "has UTN balance"
+  #   it "has U balance"
+  #   it "has testU balance"
+  #
+  # end
+
 
 end

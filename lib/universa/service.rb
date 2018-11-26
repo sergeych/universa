@@ -14,7 +14,7 @@ module Universa
     def initialize
       @config = SmartHash.new path: nil
       @known_proxies = {}
-      [Contract, PrivateKey, PublicKey, KeyAddress].each {|klass| register_proxy klass}
+      [Contract, PrivateKey, PublicKey, KeyAddress, Binder, Role, ChangeOwnerPermission].each {|klass| register_proxy klass}
     end
 
     # Implementation of {Service.configure}
@@ -92,7 +92,7 @@ module Universa
         # User called constructor
         remote_class_name = self.class.remote_class_name
         remote_class_name&.length or raise Error, "provide remote_class_name"
-        @remote = Service.umi.instantiate remote_class_name.split('.')[-1], *args, adapter: self
+        @remote = Service.umi.instantiate remote_class_name, *args, adapter: self
       end
     end
 
@@ -137,6 +137,10 @@ module Universa
     # @return [String]
     def to_s
       toString()
+    end
+
+    def self.invoke_static(method_name, *args)
+      Service.umi.invoke_static @remote_class_name, method_name, *args
     end
   end
 

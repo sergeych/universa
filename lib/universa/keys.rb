@@ -47,6 +47,21 @@ module Universa
     def to_s
       @string ||= toString()
     end
+
+    # Unpack from binary bytes
+    # @param [String] binary_string with binary packed bytes
+    def self.from_packed(binary_string)
+      binary_string.force_encoding 'binary'
+      KeyAddress.new(binary_string)
+    end
+
+    # returns binary representation. It is not a string representation!
+    # @return [String] binary string representation
+    def packed
+      s = get_packed
+      s.force_encoding 'binary'
+      s
+    end
   end
 
 end

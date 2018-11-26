@@ -11,4 +11,7 @@ describe Client do
     client.random_connection.ping.sping.should == 'spong'
     client.random_connection.execute("sping").sping.should == 'spong'
   end
+
+  # it "registers contracts" do
+  # end
 end
