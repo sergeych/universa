@@ -14,7 +14,7 @@ module Universa
     def initialize
       @config = SmartHash.new path: nil
       @known_proxies = {}
-      [Contract, PrivateKey, PublicKey, KeyAddress, Binder, Role, ChangeOwnerPermission].each {|klass| register_proxy klass}
+      [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder, Role, ChangeOwnerPermission].each {|klass| register_proxy klass}
     end
 
     # Implementation of {Service.configure}

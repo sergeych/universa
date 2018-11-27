@@ -21,8 +21,6 @@ describe KeyAddress do
 
     KeyAddress.new(sa.to_s).should == sa
     KeyAddress.new(la.to_s).should == la
-
-    p la.to_s
   end
 
   it "properly raises exception on unknown method" do

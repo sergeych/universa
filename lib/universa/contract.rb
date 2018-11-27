@@ -18,7 +18,7 @@ module Universa
     #
     # @param [Object] key key.to_s will be used (so use Symbols or Strings freely)
     # @param [Object] value
-    def []=(key,value)
+    def []=(key, value)
       set(key.to_s, value)
     end
 
@@ -27,6 +27,45 @@ module Universa
     # @return [Object] or nil
     def [](key)
       get(key.to_s)
+    end
+  end
+
+  # Adapter for Universa +HashId+ class, helps to avoid confusion when using different
+  # representations of the ID.
+  class HashId < RemoteAdapter
+    remote_class "com.icodici.universa.HashId"
+
+    # Construct from binary representation, not to confuse with binary one.
+    #
+    # @param [String] digest_bytes binary string of some +hash_id.bytes+
+    # @return [HashId] instance with instance.bytes == digest.bytes
+    def self.from_digest(digest_bytes)
+      digest_bytes.force_encoding 'binary'
+      invoke_static 'with_digest', digest_bytes
+    end
+
+    # Construct from string representation of the ID, not to confuse with binary one.
+    #
+    # @param [String] string_id id string representation, like from +hash_id_instance.to_s+. See {#to_s}.
+    def self.from_string(string_id)
+      string_id.force_encoding 'utf-8'
+      invoke_static 'with_digest', string_id
+    end
+
+    # Get binary representation. It is shorter than string representation but contain non-printable characters and
+    # can cause problems if treated like a string. Use {#to_s} to get string representation instead.
+    #
+    # @return [String] binary string
+    def bytes
+      get_digest
+    end
+
+    # Get string representation. It is, actually, base64 encoded string representation. Longer, but could easily
+    # be transferred with text protocols.
+    #
+    # @return [String] string representation
+    def to_s
+      Base64.encode64(get_digest).gsub(/\s/, '')
     end
   end
 

@@ -16,7 +16,7 @@ describe Contract do
     c1.expires_at.should > (Time.now + 120)
   end
 
-  it "provides definition" do
+  it "provides definition and id" do
     c = Contract.create @private_key
     c.definition[:name] = "test name"
     c.definition[:description] = "test description"
@@ -28,6 +28,17 @@ describe Contract do
     c1.hash_id.should == c.hash_id
     c1.definition[:name].should == "test name"
     c1.definition[:description].should == "test description"
+
+    id1 = c1.hash_id
+    id2 = HashId.from_digest(c1.hash_id.bytes)
+    id1.should == id2
+    id1.bytes.should == id2.bytes
+    id1.to_s.should == id2.to_s
+
+    id2 = HashId.from_string(c1.hash_id.to_s)
+    id1.should == id2
+    id1.bytes.should == id2.bytes
+    id1.to_s.should == id2.to_s
   end
 
 end

@@ -112,7 +112,7 @@ module Universa
     end
 
     def invoke_static(class_name, method, *args)
-      encode_result call("invoke", class_name, method, *prepare_args(args))
+      encode_result call("invoke", class_name, method.to_s.camelize_lower, *prepare_args(args))
     end
 
     # Close child process. No remote calls should occur after it.
