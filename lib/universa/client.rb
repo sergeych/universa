@@ -10,6 +10,7 @@ module Universa
   # and also implement newtor-wide procedures.
   class Client
     using Universa::Parallel
+    include Universa
 
     # Create client
     # @param [PrivateKey] private_key to connect with. Generates new one if omitted.
