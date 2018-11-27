@@ -19,11 +19,18 @@ module Universa
 
   module Parallel
 
+    # The eollection-like delegate supporting parallel execution on {#each}, {#each_with_index} and {#map}.
+    # Use +refine Enumerable+ to easily construct it as simple as +collection.par+. Inspired by Scala.
     class ParallelEnumerable < SimpleDelegator
       include Concurrent
 
       @@pool = CachedThreadPool.new
 
+      # Enumerates in parallel all items. Like {Enumerable#each_with_index}, but requires block.
+      # Blocks until all items are processed.
+      #
+      # @param [Proc] block to call with (object, index) parameters
+      # @return self
       def each_with_index &block
         latch = CountDownLatch.new(size)
         __getobj__.each_with_index {|x, index|
@@ -38,13 +45,20 @@ module Universa
           }
         }
         latch.wait
+        self
       end
 
+      # Call the given block on each item in the collection in parallel, blocks until all items are processed
+      #
+      # @return self
       def each &block
         each_with_index {|x, i| block.call(x)}
       end
 
-
+      # Parallel version of the {Enumerable#map}. Creates a new array containing the values returned by the block,
+      # using parallel execution in threads.
+      #
+      # @return new array containing the values returned by the block.
       def map &block
         result = size.times.map {nil}
         each_with_index {|value, i|
@@ -56,12 +70,22 @@ module Universa
       alias_method :collect, :map
     end
 
+    # Enhance any Enumerable instance with few utilities.
     refine Enumerable do
+
+      # Creates {ParallelEnumerable} from self.
+      #
+      # @return [ParallelEnumerable] over the self
       def par
         is_a?(ParallelEnumerable) ? self : ParallelEnumerable.new(self)
       end
 
-      def group_by &block
+      # Group elements by the value returned by the block. Return map where keys are one returned by the block
+      # and values are arrays of elements of the given Enumerable with corresponding block.
+      #
+      # @param [Object] block that calculates keys to group with for each source elements.
+      # @return [Hash] of grouped source elements
+      def group_by(&block)
         result = {}
         each {|value|
           new_key = block.call(value)
@@ -144,32 +168,39 @@ module Universa
   class NodeInfo
     attr :number, :packed_key, :url
 
+    # constructs from binary packed data
     def initialize(data)
       @data, @number, @url, @packed_key = data, data.number, data.url, data.packed_key
       @rate = Concurrent::AtomicFixnum.new
     end
 
+    # currently collected approval rate
     def rate
       @rate.value
     end
 
+    # increase approval rate
     def increment_rate
       @rate.increment
     end
 
+    # check information euqlity
     def == other
       # number == other.number && packed_key == other.packed_key && url == other.url
       url == other&.url && packed_key == other&.packed_key && url == other&.url
     end
 
+    # allows to use as hash key
     def hash
       @url.hash + @packed_key.hash
     end
 
+    # to use as hash key
     def eql?(other)
       self == other
     end
 
+    # ordered by approval rate
     def < other
       rate < other.rate
     end

@@ -16,14 +16,14 @@ module Universa
 
     # Set object for a key
     #
-    # @param [Object] key, key.to_s will be used (so use Symbols or Strings freely)
+    # @param [Object] key key.to_s will be used (so use Symbols or Strings freely)
     # @param [Object] value
     def []=(key,value)
       set(key.to_s, value)
     end
 
     # Get object by key.
-    # @param [Object] key, key.to_s will be used (so use Symbols or Strings freely)
+    # @param [Object] key key.to_s will be used (so use Symbols or Strings freely)
     # @return [Object] or nil
     def [](key)
       get(key.to_s)
@@ -113,6 +113,10 @@ module Universa
       get_definition.get_data
     end
 
+    # Get packed transaction containing the serialized signed contract and all its counterparts.
+    # Be sure to cal {#seal} somewhere before.
+    #
+    # @return binary string with packed transaction.
     def packed
       get_packed_transaction
     end
