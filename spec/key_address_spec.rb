@@ -1,8 +1,12 @@
 
 describe KeyAddress do
 
+  before :all do
+    @key = PrivateKey.new 2048
+  end
+
   it "converts to and from string/binary rep" do
-    key = PrivateKey.new 2048
+    key = @key
     sa = key.short_address
     la = key.long_address
 
@@ -21,6 +25,12 @@ describe KeyAddress do
 
     KeyAddress.new(sa.to_s).should == sa
     KeyAddress.new(la.to_s).should == la
+  end
+
+  it "packs with password not touching the address" do
+    k1 = PrivateKey.from_packed(@key.pack_with_password("helloworld"), password: "helloworld")
+    k1.should == @key
+    k1.short_address.to_s.should == @key.short_address.to_s
   end
 
   it "properly raises exception on unknown method" do

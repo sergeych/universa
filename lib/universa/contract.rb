@@ -101,6 +101,7 @@ module Universa
 
     # Load from transaction pack
     def self.from_packed packed
+      packed.force_encoding 'binary'
       self.invoke_static "fromPackedTransaction", packed
     end
 
