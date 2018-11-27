@@ -95,14 +95,37 @@ module Universa
       end
     end
 
+    refine Array do
+
+      # Creates {ParallelEnumerable} from self.
+      #
+      # @return [ParallelEnumerable] over the self
+      def par
+        is_a?(ParallelEnumerable) ? self : ParallelEnumerable.new(self)
+      end
+
+      # Group elements by the value returned by the block. Return map where keys are one returned by the block
+      # and values are arrays of elements of the given Enumerable with corresponding block.
+      #
+      # @param [Object] block that calculates keys to group with for each source elements.
+      # @return [Hash] of grouped source elements
+      def group_by(&block)
+        result = {}
+        each {|value|
+          new_key = block.call(value)
+          (result[new_key] ||= []) << value
+        }
+        result
+      end
+    end
+
   end
 
-
-  using Parallel
 
   # Universa network client reads current network configuration and provides access to each node independently
   # and also implement newtor-wide procedures.
   class Client
+    using Universa::Parallel
 
     # Create client
     # @param [PrivateKey] private_key to connect with. Generates new one if omitted.
@@ -124,6 +147,33 @@ module Universa
     # @return [Connection] random connection
     def random_connection
       @nodes.sample
+    end
+
+    def register_single contract
+      random_connection.register_single contract
+    end
+
+    # Perform fats consensus state check. E.g. it scans up to 2/3 of the network until
+    # the positive or negative consensus will be found. So far you can only rely on
+    # result.approved? as it returns some last node result which, though, match the
+    # consensus. Aggregation of parameters is under way.
+    #
+    # @param [Contract | HashId] obj to check
+    # @return [ContractState] of some final node check It does not aggregates (yet)
+    def get_state obj
+      result = Concurrent::IVar.new
+      negative_votes = Concurrent::AtomicFixnum.new(@nodes.size * 20 / 100)
+      positive_votes = Concurrent::AtomicFixnum.new(@nodes.size * 30 / 100)
+      random_connections(@nodes.size * 2 / 3).par.each {|conn|
+        if result.incomplete?
+          if (state = conn.get_state(obj)).approved?
+            result.try_set(state) if positive_votes.decrement < 0
+          else
+            result.try_set(state) if negative_votes.decrement < 0
+          end
+        end
+      }
+      result.value
     end
 
     # @return [Array(Connection)] array of count randomly selected connections
@@ -228,6 +278,36 @@ module Universa
       execute(:sping)
     end
 
+    # Register a single contract (on private network or if you have white key allowing free operations)
+    # on a single node.
+    #
+    # @param [Contract] contract, muts be sealed ({Contract#seal})
+    # @return [ContractState] of the result. Could contain errors.
+    def register_single contract
+      result = ContractState.new(execute "approve", packedItem: contract.packed)
+      while result.is_pending
+        sleep(0.1)
+        result = get_state contract
+      end
+      result
+    end
+
+    # Get contract or hashId state from this single node
+    # @param [Contract | HashId] x what to check
+    # @return [ContractState]
+    def get_state x
+      id = case x
+             when HashId
+               x
+             when Contract
+               x.hash_id
+             else
+               raise ArgumentError, "bad argument, want Contract or HashId"
+           end
+      ContractState.new(execute "getState", itemId: id)
+    end
+
+
     # Execute Universa Node client protocol command with optional keyword arguments that will be passed
     # to the node.
     #
@@ -235,6 +315,14 @@ module Universa
     # @return [SmartHash] with the command result
     def execute name, **kwargs
       connection.command name.to_s, *kwargs.to_a.flatten
+    end
+
+    def to_s
+      "Conn<#{@node_info.url}>"
+    end
+
+    def inspect
+      to_s
     end
 
     protected
@@ -249,6 +337,51 @@ module Universa
       }
     end
 
+  end
+
+  class ContractState
+    def initialize(universa_contract_state)
+      @source = universa_contract_state
+    end
+
+    def errors
+      @source.errors&.map &:to_s
+    rescue
+      "failed to extract errors: #$!"
+    end
+
+    def state
+      @source.itemResult.state
+    end
+
+    def is_pending
+      state.start_with?('PENDING')
+    end
+
+    def is_approved
+      case state
+        when 'APPROVED', 'LOCKED'
+          true
+        else
+          false
+      end
+    end
+
+    def approved?
+      is_approved
+    end
+
+    def pending?
+      is_pending
+    end
+
+    def to_s
+      "ContractState:#{state}"
+    end
+
+    def inspect
+      to_s
+    end
   end
 
 end

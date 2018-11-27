@@ -5,6 +5,15 @@ module Universa
     remote_class "com.icodici.universa.contract.permissions.ChangeOwnerPermission"
   end
 
+  # Adapter for Universa RevokePermission
+  class RevokePermission < RemoteAdapter
+    remote_class "com.icodici.universa.contract.permissions.RevokePermission"
+  end
+
+  class SplitJoinPermission < RemoteAdapter
+    remote_class "com.icodici.universa.contract.permissions.SplitJoinPermission"
+  end
+
   # Adapter for Universa Role
   class Role < RemoteAdapter
     remote_class "com.icodici.universa.contract.roles.Role"
@@ -27,6 +36,10 @@ module Universa
     # @return [Object] or nil
     def [](key)
       get(key.to_s)
+    end
+
+    def self.of hash
+      invoke_static "of", hash.transform_keys(&:to_s)
     end
   end
 
@@ -95,6 +108,7 @@ module Universa
       contract.register_role(contract.issuer.link_as("owner"))
       contract.register_role(contract.issuer.link_as("creator"))
       contract.add_permission ChangeOwnerPermission.new(contract.owner.link_as "@owner")
+      contract.add_permission RevokePermission.new(contract.owner.link_as "@owner")
       contract.add_signer_key issuer_key
       contract
     end
@@ -148,9 +162,21 @@ module Universa
       get_expires_at
     end
 
+    def expires_at= time
+      set_expires_at time
+    end
+
     # @return definition data
     def definition
-      get_definition.get_data
+      @definition ||= get_definition.get_data
+    end
+
+    def state
+      @state ||= get_state_data
+    end
+
+    def amount
+      v = state[:amount] and BigDecimal(v.to_s)
     end
 
     # Get packed transaction containing the serialized signed contract and all its counterparts.
@@ -168,6 +194,11 @@ module Universa
         puts "(#{e.object || ''}): #{e.error}"
       }
     end
+
+    # def create_revocation *keys
+      # Service.umi.invoke_static 'ContractService', 'createRevocation', *keyss
+      # sel
+    # end
 
   end
 

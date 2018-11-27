@@ -38,4 +38,11 @@ describe KeyAddress do
     expect(->{x.not_existing_method(1)}).to raise_error(NoMethodError)
   end
 
+  it "convertis to binder" do
+    x = Binder.of hello: "world", 1 => 3
+    x["hello"].should == "world"
+    x[:hello].should == "world"
+    x["1"].should == 3
+  end
+
 end
