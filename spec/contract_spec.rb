@@ -46,11 +46,20 @@ describe Contract do
     other = PrivateKey.new 2048
     c.can_perform_role(:owner, other).should be_falsey
     c.can_perform_role(:owner, @private_key).should be_truthy
-    c.owner = other
+    c.owner = other.short_address
     c.can_perform_role(:owner, other).should be_truthy
     c.can_perform_role(:owner, @private_key).should be_falsey
     c.seal
     c.check.should be_truthy
+  end
+
+  it "has proper state and transactional" do
+    c = Contract.create(@private_key)
+    c = Contract.from_packed(c.seal)
+    c.state.should be_instance_of(Binder)
+    c = Contract.from_packed(c.packed)
+    c.state.should be_instance_of(Binder)
+    c.transactional.should be_instance_of(Binder)
   end
 
 end

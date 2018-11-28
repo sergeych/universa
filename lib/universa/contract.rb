@@ -41,6 +41,10 @@ module Universa
     def self.of hash
       invoke_static "of", hash.transform_keys(&:to_s)
     end
+
+    # def metohd_missing?
+    #
+    # end
   end
 
   # Adapter for Universa +HashId+ class, helps to avoid confusion when using different
@@ -176,11 +180,31 @@ module Universa
     end
 
     def state
-      @state ||= get_state_data
+      @state ||= getStateData()
     end
 
+    # Get +transactional.data+ section creating it if need
+    # @return [Binder] instance
+    def transactional
+      @transactional ||= getTransactionalData()
+    end
+
+    # def transactional?
+    #   !!getTransactional()
+    # end
+
+    # Helper for many token-like contracts containing state.data.amount
+    # @return [BigDecimal] amount or nil
     def amount
       v = state[:amount] and BigDecimal(v.to_s)
+    end
+
+    # Write helper for many token-like contracts containing state.data.amount. Saves value
+    # in state.data.anomount and properly encodes it so it will be preserved on packing.
+    #
+    # @param [Object] value, should be some representation of a number (also string)
+    def amount= (value)
+      state[:amount] = value.to_s.force_encoding('utf-8')
     end
 
     # Get packed transaction containing the serialized signed contract and all its counterparts.
@@ -199,8 +223,17 @@ module Universa
       }
     end
 
+    # Call it after check to get summaru of errors found.
+    #
+    # @return [String] possibly empty ''
+    def errors_string
+      getErrors.map {|e|  "(#{e.object || ''}): #{e.error}"}.join(', ').strip
+    end
+
     def can_perform_role name, *keys
-      getRole(name.to_s).isAllowedForKeys(Set.new keys.map(&:public_key))
+      getRole(name.to_s).isAllowedForKeys(Set.new keys.map{ |x|
+        x.is_a?(PrivateKey) ? x.public_key : x
+      })
     end
 
     # def create_revocation *keys

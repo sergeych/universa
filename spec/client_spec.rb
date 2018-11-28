@@ -6,6 +6,7 @@ describe Client do
 
 
   it "scans the network" do
+    p Service.umi.version
     client = Client.new
     client.size.should > 30
     client.random_connection.ping.sping.should == 'spong'
