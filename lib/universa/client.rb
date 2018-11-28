@@ -12,6 +12,8 @@ module Universa
     using Universa::Parallel
     include Universa
 
+    attr :connection_key
+
     # Create client
     # @param [PrivateKey] private_key to connect with. Generates new one if omitted.
     def initialize private_key = nil
