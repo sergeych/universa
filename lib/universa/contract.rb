@@ -147,6 +147,10 @@ module Universa
       get_owner
     end
 
+    def owner= key
+      set_owner_key key
+    end
+
     # Shortcut for is_ok
     def ok?
       is_ok
@@ -193,6 +197,10 @@ module Universa
       getErrors.each {|e|
         puts "(#{e.object || ''}): #{e.error}"
       }
+    end
+
+    def can_perform_role name, *keys
+      getRole(name.to_s).isAllowedForKeys(Set.new keys.map(&:public_key))
     end
 
     # def create_revocation *keys

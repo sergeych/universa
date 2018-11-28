@@ -239,8 +239,15 @@ module Universa
           x._as_umi_arg(self)
         else
           case x
+            when Set
+              # Make a Java Set
+              r = call("instantiate","Set", x.to_a.map{|i| i._as_umi_arg(self)})
+              # Ref will garbage collect it
+              Ref.new(self, r)
+              # but we need a ref struct only:
+              r
             when Time
-              { __type: 'unixtime', seconds: x.to_i}
+              {__type: 'unixtime', seconds: x.to_i}
             when String
               x.encoding == Encoding::BINARY ? {__type: 'binary', base64: Base64.encode64(x)} : x
             else
