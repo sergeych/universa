@@ -147,6 +147,8 @@ module Universa
   # Access to the single node using universa client protocol.
   #
   class Connection
+    include Universa
+
     # create connection for a given clietn. Don't call it direcly, use
     # {Client.random_connection} or {Client.random_connections} instead. The client implements
     # lazy initialization so time-consuming actual connection will be postponed until
