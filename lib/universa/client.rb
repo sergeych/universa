@@ -49,18 +49,20 @@ module Universa
     # @return [ContractState] of some final node check It does not aggregates (yet)
     def get_state obj
       result = Concurrent::IVar.new
-      negative_votes = Concurrent::AtomicFixnum.new(@nodes.size * 20 / 100)
+      negative_votes = Concurrent::AtomicFixnum.new(@nodes.size * 11 / 100)
       positive_votes = Concurrent::AtomicFixnum.new(@nodes.size * 30 / 100)
-      random_connections(@nodes.size * 2 / 3).par.each {|conn|
-        if result.incomplete?
-          if (state = conn.get_state(obj)).approved?
-            result.try_set(state) if positive_votes.decrement < 0
-          else
-            result.try_set(state) if negative_votes.decrement < 0
+      retry_with_timeout(20, 3) {
+        random_connections(@nodes.size).par.each {|conn|
+          if result.incomplete?
+            if (state = conn.get_state(obj)).approved?
+              result.try_set(state) if positive_votes.decrement < 0
+            else
+              result.try_set(state) if negative_votes.decrement < 0
+            end
           end
-        end
+        }
+        result.value
       }
-      result.value
     end
 
     # @return [Array(Connection)] array of count randomly selected connections
@@ -173,12 +175,14 @@ module Universa
     # @param [Contract] contract, muts be sealed ({Contract#seal})
     # @return [ContractState] of the result. Could contain errors.
     def register_single contract
-      result = ContractState.new(execute "approve", packedItem: contract.packed)
-      while result.is_pending
-        sleep(0.1)
-        result = get_state contract
-      end
-      result
+      retry_with_timeout(15, 3) {
+        result = ContractState.new(execute "approve", packedItem: contract.packed)
+        while result.is_pending
+          sleep(0.1)
+          result = get_state contract
+        end
+        result
+      }
     end
 
     # Get contract or hashId state from this single node
