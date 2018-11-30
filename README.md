@@ -6,6 +6,14 @@ for direct access to remote objects.
 This is an under-construction official gem from [Universa][universa] to facilitate access to the
 Java library using Universa's UMI protocol.  
 
+## News
+- ruby sugar for Universa native classes: Role, Adapter, Contract, Binder, HashId.
+- Contract creation, revocation, changing owner in ruby way
+- Network operation for white keys/private networks: parallel state check, contract recistration. 
+
+This gem is already used in new Universa projects and is being actively tested.
+
+
 ## Installation
 
 ### Prerequisites
