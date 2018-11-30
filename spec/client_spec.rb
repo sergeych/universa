@@ -23,7 +23,7 @@ describe Client do
       @client = Client.new @test_access_key
     end
 
-    it "registers and checks state" do
+    it "registers and checks state and dies" do
       # @client.random_connection.execute("sping").sping.should == 'spong'
       contract = Contract.create @test_access_key
       contract.definition[:name] = "just a test"
@@ -40,15 +40,14 @@ describe Client do
       state.errors.should be_nil
       @client.get_state(contract).should be_approved
 
-      # contract = contract.create_revocation(@test_access_key)
-      # p contract
-      # state = @client.register_single(contract)
-      # state.should_not be_approved
-      # state.state.should == 'REVOKED'
+      rev = contract.createRevocation(@test_access_key)
+      state = @client.register_single(rev)
+      state.should be_approved
+
+      state = @client.get_state(contract)
+      state.should_not be_approved
+      state.state.should == 'REVOKED'
     end
 
   end
-
-  # it "registers contracts" do
-  # end
 end

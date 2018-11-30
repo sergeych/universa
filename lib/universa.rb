@@ -5,6 +5,7 @@ require "universa/tools"
 require "universa/umi"
 require "universa/service"
 require "universa/keys"
+require "universa/binder"
 require "universa/contract"
 require "universa/client"
 

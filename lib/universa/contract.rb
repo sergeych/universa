@@ -19,33 +19,6 @@ module Universa
     remote_class "com.icodici.universa.contract.roles.Role"
   end
 
-  # Adapter for Universa Binder class. Provides some ruby-style helpers
-  class Binder < RemoteAdapter
-    remote_class "net.sergeych.tools.Binder"
-
-    # Set object for a key
-    #
-    # @param [Object] key key.to_s will be used (so use Symbols or Strings freely)
-    # @param [Object] value
-    def []=(key, value)
-      set(key.to_s, value)
-    end
-
-    # Get object by key.
-    # @param [Object] key key.to_s will be used (so use Symbols or Strings freely)
-    # @return [Object] or nil
-    def [](key)
-      get(key.to_s)
-    end
-
-    def self.of hash
-      invoke_static "of", hash.transform_keys(&:to_s)
-    end
-
-    # def metohd_missing?
-    #
-    # end
-  end
 
   # Adapter for Universa +HashId+ class, helps to avoid confusion when using different
   # representations of the ID.
@@ -227,19 +200,25 @@ module Universa
     #
     # @return [String] possibly empty ''
     def errors_string
-      getErrors.map {|e|  "(#{e.object || ''}): #{e.error}"}.join(', ').strip
+      getErrors.map {|e| "(#{e.object || ''}): #{e.error}"}.join(', ').strip
     end
 
     def can_perform_role name, *keys
-      getRole(name.to_s).isAllowedForKeys(Set.new keys.map{ |x|
+      getRole(name.to_s).isAllowedForKeys(Set.new keys.map {|x|
         x.is_a?(PrivateKey) ? x.public_key : x
       })
     end
 
-    # def create_revocation *keys
-      # Service.umi.invoke_static 'ContractService', 'createRevocation', *keyss
-      # sel
-    # end
+    # Create a contract that revokes this one if register with the Universa network. BE CAREFUL!
+    # REVOCATION IS IRREVERSIBLE! period.
+    #
+    # @param [PrivateKey] keys enough to allow this contract revocation
+    # @return [Contract] revocation contract. Register it with the Universa network to perform revocation.
+    def create_revocation(*keys)
+      revoke = Service.umi.invoke_static 'ContractsService', 'createRevocation', *keys
+      revoke.seal
+      revoke
+    end
 
   end
 

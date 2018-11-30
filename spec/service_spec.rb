@@ -10,6 +10,57 @@ describe Service do
 
   context "when created" do
 
+    context "supports binder" do
+      before :each do
+        @src = {"hello" => "world", "foo" => 101}
+        @binder = Service.umi.invoke_static "Binder", "of", *@src.to_a.flatten
+      end
+
+      it "provides valid interface to remote binder" do
+        # This should be converted to a "binder" adapter
+        @binder["hello"].should == "world"
+        @binder[:foo].should == 101
+        @binder.should be_instance_of(Binder)
+        @binder.size.should == 2
+
+        # It should behave like an object
+        @binder.hello.should == 'world'
+        @binder.foo.should == 101
+
+        # and it sould be like ruby collection
+        Set.new(@binder.keys).should == Set.new(['foo', 'hello'])
+        @binder.keys.should be_instance_of(Array)
+        Set.new(@binder.values).should == Set.new(['world', 101])
+        @binder.values.should be_instance_of(Array)
+
+        @binder.not_existing.should == nil
+      end
+
+      it "converts to array" do
+        @binder.to_a.to_h.should == @src
+      end
+
+      it "provides map" do
+        @binder.map {|x, y| [x, y]}.to_h.should == @src
+      end
+      it "converts to hash" do
+        @binder.to_h.should == @src
+      end
+
+      it "provides each" do
+        res = {}
+        @binder.each {|x, y| res[x] = y}
+        res.should == @src
+      end
+
+      it "provides to_binder" do
+        b = { hello: 1}.to_binder
+        b.should be_instance_of(Binder)
+        b.to_h.should == { 'hello' => 1}
+      end
+
+    end
+
     it "create and restore proxy objects" do
       key = PrivateKey.new 2048
       contract = Contract.new(key)
@@ -42,6 +93,7 @@ describe Service do
     end
 
   end
+
 
   # context "default wallet" do
   #
