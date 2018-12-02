@@ -172,9 +172,9 @@ module Universa
     # Register a single contract (on private network or if you have white key allowing free operations)
     # on a single node.
     #
-    # @param [Contract] contract, muts be sealed ({Contract#seal})
+    # @param [Contract] contract must be sealed ({Contract#seal})
     # @return [ContractState] of the result. Could contain errors.
-    def register_single contract
+    def register_single(contract)
       retry_with_timeout(15, 3) {
         result = ContractState.new(execute "approve", packedItem: contract.packed)
         while result.is_pending
@@ -205,8 +205,9 @@ module Universa
     # to the node.
     #
     # @param [String|Symbol] name of the command
+    # @param kwargs arguments to call
     # @return [SmartHash] with the command result
-    def execute name, **kwargs
+    def execute(name, **kwargs)
       connection.command name.to_s, *kwargs.to_a.flatten
     end
 

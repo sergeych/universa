@@ -34,11 +34,12 @@ module Universa
       invoke_static 'with_digest', digest_bytes
     end
 
-    # Construct from string representation of the ID, not to confuse with binary one.
+    # Construct from string representation of the ID, not to confuse with binary one. This method takes both
+    # regular base64 representation and RFC3548 url-safe modification, as from {#to_url_safe_string}.
     #
     # @param [String] string_id id string representation, like from +hash_id_instance.to_s+. See {#to_s}.
     def self.from_string(string_id)
-      string_id.force_encoding 'utf-8'
+      string_id.force_encoding('utf-8').gsub('-','+').gsub('_','/')
       invoke_static 'with_digest', string_id
     end
 
@@ -57,6 +58,28 @@ module Universa
     def to_s
       Base64.encode64(get_digest).gsub(/\s/, '')
     end
+
+    # Converts to URL-safe varianot of base64, as RFC 3548 suggests:
+    #     the 63:nd / character with the underscore _
+    #     the 62:nd + character with the minus -
+    #
+    # Could be decoded safely back with {HashId.from_string} but not (most likely) with JAVA API itself
+    # @return [String] RFC3548 modified base64
+    def to_url_safe_string
+      Base64.encode64(get_digest).gsub(/\s/, '').gsub('/','_').gsub('+', '-')
+    end
+
+    # To use it as a hash key_address.
+    # @return hash calculated over the digest bytes
+    def hash
+      bytes.hash
+    end
+
+    # To use it as a hash key_address. Same as this == other.
+    def eql? other
+      self == other
+    end
+
   end
 
   # Universa contract adapter.
@@ -66,17 +89,17 @@ module Universa
     # Create simple contract with preset critical parts:
     #
     # - expiration set to 90 days unless specified else
-    # - issuer role is set to the address of the issuer key, short ot long
+    # - issuer role is set to the address of the issuer key_address, short ot long
     # - creator role is set as link to issuer
     # - owner role is set as link to issuer
     # - change owner permission is set to link to owner
     #
-    # The while contract is then signed by the issuer key. Not that it will not seal it: caller almost always
+    # The while contract is then signed by the issuer key_address. Not that it will not seal it: caller almost always
     # will add more data before it, then must call #seal().
     #
     # @param [PrivateKey] issuer_key also will be used to sign it
     # @param [Time] expires_at defaults to 90 days
-    # @param [Boolean] use_short_address set to true to use short address of the issuer key in the role
+    # @param [Boolean] use_short_address set to true to use short address of the issuer key_address in the role
     # @return [Contract] simple contact, not sealed
     def self.create issuer_key, expires_at: (Time.now + 90 * 24 * 60 * 60), use_short_address: false
       contract = Contract.new
@@ -92,6 +115,7 @@ module Universa
 
     # Load from transaction pack
     def self.from_packed packed
+      packed.nil? and raise ArgumentError, "packed contract required"
       packed.force_encoding 'binary'
       self.invoke_static "fromPackedTransaction", packed
     end
@@ -124,8 +148,10 @@ module Universa
       get_owner
     end
 
-    def owner= key
-      set_owner_key key
+    # Set owner to the key_address, usable only in the simplest case where owner is the single address.
+    # @param [KeyAddress | PublicKey] key_address
+    def owner=(key_address)
+      set_owner_key key_address
     end
 
     # Shortcut for is_ok
@@ -134,16 +160,29 @@ module Universa
     end
 
     # shortcut for getHashId
+    # @return [HashId] of the contracr
     def hash_id
-      get_id
+      getId()
     end
 
-    # shortcut for get_expires_at
+    # @return [HashId] of the origin contract
+    def origin
+      getOrigin()
+    end
+
+    # @return [HashId] pf the parent contracr
+    def parent
+      getParent()
+    end
+
+    # shortcut for get_expires_at. Get the contract expiration time.
     def expires_at
       get_expires_at
     end
 
-    def expires_at= time
+    # set +expires_at+ field
+    # @param [Time] time when this contract will be expired, if yet +APPROVED+.
+    def expires_at=(time)
       set_expires_at time
     end
 
@@ -152,6 +191,7 @@ module Universa
       @definition ||= get_definition.get_data
     end
 
+    # Return +state+ binder. Shortcut for Java API +getStateData()+
     def state
       @state ||= getStateData()
     end
@@ -175,7 +215,7 @@ module Universa
     # Write helper for many token-like contracts containing state.data.amount. Saves value
     # in state.data.anomount and properly encodes it so it will be preserved on packing.
     #
-    # @param [Object] value, should be some representation of a number (also string)
+    # @param [Object] value should be some representation of a number (also string)
     def amount= (value)
       state[:amount] = value.to_s.force_encoding('utf-8')
     end
@@ -203,7 +243,11 @@ module Universa
       getErrors.map {|e| "(#{e.object || ''}): #{e.error}"}.join(', ').strip
     end
 
-    def can_perform_role name, *keys
+    # Test that some set of keys could be used to perform some role.
+    #
+    # @param [String] name of the role to check
+    # @param [PublicKey] keys instances to check against
+    def can_perform_role(name, *keys)
       getRole(name.to_s).isAllowedForKeys(Set.new keys.map {|x|
         x.is_a?(PrivateKey) ? x.public_key : x
       })

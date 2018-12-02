@@ -1,4 +1,3 @@
-
 describe Client do
   before :all do
     @client = Client.new
@@ -21,12 +20,13 @@ describe Client do
         skip "no test key found: #$!"
       end
       @client = Client.new @test_access_key
+      @contract = nil
     end
 
-    it "registers and checks state and dies" do
+    it "checks state on undefined" do
       # @client.random_connection.execute("sping").sping.should == 'spong'
       contract = Contract.create @test_access_key
-      contract.definition[:name] = "just a test"
+      contract.definition.name = "just a test"
       contract.expires_at = Time.now + 900
       contract.seal()
 
@@ -34,6 +34,13 @@ describe Client do
       state.state.should == 'UNDEFINED'
       state.is_pending.should == false
       state.is_approved.should == false
+    end
+
+    it "registers new contract and revokes it" do
+      contract = Contract.create @test_access_key
+      contract.definition.name = "just a test"
+      contract.expires_at = Time.now + 900
+      contract.seal()
 
       state = @client.register_single contract
       state.should be_approved

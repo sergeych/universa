@@ -10,10 +10,16 @@ describe Contract do
     c.seal()
     c.check() and c.trace_errors()
     c.should be_ok
+    c.packed
+    c.hash_id.should_not be_nil
 
     c1 = Contract.from_packed(c.packed)
     c1.hash_id.should == c.hash_id
     c1.expires_at.should > (Time.now + 120)
+
+    c1.hash_id.should_not be_nil
+    c1.origin.should == c1.hash_id
+    c1.parent.should == nil
   end
 
   it "provides definition and id" do
@@ -60,6 +66,16 @@ describe Contract do
     c = Contract.from_packed(c.packed)
     c.state.should be_instance_of(Binder)
     c.transactional.should be_instance_of(Binder)
+  end
+
+  it "should have properly cacheable hashId" do
+    c = Contract.create(@private_key)
+    c.seal()
+    id1 = c.hash_id
+    id2 = HashId.from_string(c.hash_id.to_s)
+    id1.should == id2
+    hash = { id1 => 17 }
+    hash[id2].should == 17
   end
 
 end

@@ -7,6 +7,10 @@ This is an under-construction official gem from [Universa][universa] to facilita
 Java library using Universa's UMI protocol.  
 
 ## News
+
+- alfa version of the local FS-based contract store.
+- ability to edit `contract.state` and `contract.transactional` in new revisions.
+- fixed errors with interchange builder and set based objects
 - ruby sugar for Universa native classes: Role, Adapter, Contract, Binder, HashId.
 - Contract creation, revocation, changing owner in ruby way
 - Network operation for white keys/private networks: parallel state check, contract recistration. 

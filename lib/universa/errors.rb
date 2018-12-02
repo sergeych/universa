@@ -16,6 +16,16 @@ module Universa
     end
   end
 
+  class StoreError < Error;
+  end
+
+  class NotFoundError < StoreError
+  end
+
+  class IllegalStateError < StoreError
+
+  end
+
   # Easy print stack trace refinement
   refine Exception do
 

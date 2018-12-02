@@ -68,8 +68,8 @@ module Universa
     end
 
     # @return an array of values returned by the block
-    # @yiekd [key,value] pairs.
-    def map &block
+    # @yield [key,value] pairs.
+    def map(&block)
       keys.map {|k| block.call [k, __getobj__.get(k)]}
     end
 
@@ -86,7 +86,13 @@ module Universa
 
 end
 
+# enhance Hash with UMI access convenience methods.
 class Hash
+  # Convert the hash to the {}Binder} stored in the remote side and suitable for
+  # Universa UMI calls.
+  #
+  # @return [Binder] constructed reference to the remotely created Binder.
+  #
   def to_binder
     Binder.of self
   end

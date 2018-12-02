@@ -7,14 +7,16 @@ module Universa
   class SmartHash < Farcall::SmartHash
   end
 
-  def retry_with_timeout(max_timeout = 15, max_times = 3, &block)
+  def retry_with_timeout(max_timeout = 25, max_times = 3, &block)
     attempt = 0
-    Timeout::timeout(max_timeout, &block)
-  rescue
-    attempt += 1
-    puts "timeout: retry (#$!): #{attempt}"
-    retry if attempt < max_times
-    raise
+    begin
+      Timeout::timeout(max_timeout, &block)
+    rescue
+      attempt += 1
+      puts "timeout: retry (#$!): #{attempt}"
+      retry if attempt < max_times
+      raise
+    end
   end
 
   module Parallel
@@ -26,7 +28,7 @@ module Universa
 
       @@pool = CachedThreadPool.new
 
-      # Enumerates in parallel all items. Like {Enumerable#each_with_index}, but requires block.
+      # Enumerates in parallel all items. Like +Enumerable#each_with_index+, but requires block.
       # Blocks until all items are processed.
       #
       # @param [Proc] block to call with (object, index) parameters
@@ -55,7 +57,7 @@ module Universa
         each_with_index {|x, i| block.call(x)}
       end
 
-      # Parallel version of the {Enumerable#map}. Creates a new array containing the values returned by the block,
+      # Parallel version of the +Enumerable#map+. Creates a new array containing the values returned by the block,
       # using parallel execution in threads.
       #
       # @return new array containing the values returned by the block.
