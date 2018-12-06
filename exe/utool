@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+
+
+begin
+  $:.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
+  require 'universa'
+rescue LoadError => e
+  require 'universa'
+end
+
+require 'optparse'
+
+include Universa
+
+options = OpenStruct.new
+options.key_path = "~/.universa/test_access.private.unikey"
+options.key_password = nil
+
+opt_parser = OptionParser.new {|opts|
+  opts.banner = "Universa Node tool #{Universa::VERSION}"
+  opts.separator ""
+
+  opts.on("-k", "--key KEY_FILE",
+          "load the access key from the specified file. By default, looks in", "#{options.key_path}") do |file_name|
+    options.key_path = File.expand_path(file_name)
+  end
+
+  opts.on("-n", "--node name", "node to connect, without protocol, e.g. 'node-7-com.universa.io'") do |node|
+    options.node = node
+  end
+
+  opts.separator ""
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+  opts.on_tail("-v", "--version", "Show versions") do
+    puts "UNodeTool version: #{Universa::VERSION}"
+    puts "UMI version      : #{Service.umi.version}"
+    exit
+  end
+}
+
+def seconds_to_hms seconds
+  mm, ss = seconds.divmod(60)
+  hh, mm = mm.divmod(60)
+  "%d:%02d:%02d" % [hh, mm, ss]
+end
+
+
+opt_parser.parse!
+
+begin
+  node = options.node or raise "please specify node name with --node"
+  key = PrivateKey.from_packed(
+      open(File.expand_path options.key_path, 'rb').read,
+      password: options.key_password
+  ) rescue nil
+  raise "failed to load private key from #{options.key_path}" unless key
+  conn = Client.new(key)[node]
+  stats = conn.execute("getStats", showDays: 60)
+
+  puts
+  puts "--------------- UNIVERSA NODE ##{stats.nodeNumber} (#{conn.name}) REPORT : -------------------------"
+  puts
+  puts "Server uptime (since last restart): #{seconds_to_hms stats.uptime} (#{stats.uptime}\")"
+  puts "Active ledger records             : #{stats.ledgerSize}"
+  puts "Software version                  : #{stats.coreVersion}"
+  puts
+  stats.payments.each_slice(4) {|pss|
+    puts pss.map {|pdata| "#{pdata.date}: %4dU" % pdata.units}.join("\t")
+  }
+
+rescue RuntimeError
+  puts $!.message
+  puts "Try --help fo see usage information"
+rescue
+  p $!.class.name
+  $stderr.puts "Excetion: #{$!.message}"
+  $stderr.puts $!.backtrace.join("\n")
+  puts "\n\ntry --help"
+end
+
+
+# key = PrivateKey.from_packed

@@ -2,8 +2,9 @@
 
 require "universa"
 
+puts "This tool is not uet available, sorry"
 
-puts "Checking prerequisites"
+# puts "Checking prerequisites"
 
-puts "Found UMI version: #{Universa::UMI.new.version}"
+# puts "Found UMI version: #{Universa::UMI.new.version}"
 

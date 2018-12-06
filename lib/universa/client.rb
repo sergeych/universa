@@ -70,6 +70,9 @@ module Universa
       @nodes.sample(count)
     end
 
+    def [] name
+      @nodes.find {|x| x.url =~ /#{name}/}
+    end
 
     private
 
@@ -143,6 +146,13 @@ module Universa
     def < other
       rate < other.rate
     end
+
+    def name
+      @name ||= begin
+        url =~ /^https{0,1}:\/\/([^:]*)/
+        $1
+      end
+    end
   end
 
 
@@ -211,6 +221,22 @@ module Universa
       connection.command name.to_s, *kwargs.to_a.flatten
     end
 
+    # def stats days=0
+    #   connection.getStats(days.to_i)
+    # end
+
+    def url
+      @node_info.url
+    end
+
+    def name
+      @node_info.name
+    end
+
+    def number
+      @node_info.number
+    end
+
     def to_s
       "Conn<#{@node_info.url}>"
     end
@@ -223,11 +249,13 @@ module Universa
 
     def connection
       @connection ||= retry_with_timeout(15, 3) {
-        Service.umi.instantiate "com.icodici.universa.node2.network.Client",
-                                @node_info.url,
-                                @client.private_key,
-                                nil,
-                                false
+        conn = Service.umi.instantiate("com.icodici.universa.node2.network.Client",
+                                       @node_info.url,
+                                       @client.private_key,
+                                       nil,
+                                       false)
+                   .getClient(@node_info.number - 1)
+        conn
       }
     end
 
