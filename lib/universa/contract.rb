@@ -1,3 +1,5 @@
+require 'bigdecimal'
+
 module Universa
 
   # Adapter for Universa ChangeOwnerPermission
@@ -19,6 +21,18 @@ module Universa
     remote_class "com.icodici.universa.contract.roles.Role"
   end
 
+
+  # adapter for Universa TransactionPack
+  class TransactionPack < RemoteAdapter
+    remote_class "com.icodici.universa.contract.TransactionPack"
+
+    # Unpack the transaction pack
+    # @return [TransactionPack] unpacked
+    def self.unpack(packed_transaction)
+      packed_transaction.force_encoding('binary')
+      invoke_static 'unpack', packed_transaction
+    end
+  end
 
   # Adapter for Universa +HashId+ class, helps to avoid confusion when using different
   # representations of the ID.
@@ -209,7 +223,7 @@ module Universa
     # Helper for many token-like contracts containing state.data.amount
     # @return [BigDecimal] amount or nil
     def amount
-      v = state[:amount] and BigDecimal(v.to_s)
+      v = state[:amount] and BigDecimal.new(v.to_s)
     end
 
     # Write helper for many token-like contracts containing state.data.amount. Saves value

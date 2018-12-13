@@ -8,6 +8,7 @@ Java library using Universa's UMI protocol.
 
 ## News
 
+- added syntax sugar for TransactionPack
 - alfa version of the local FS-based contract store.
 - ability to edit `contract.state` and `contract.transactional` in new revisions.
 - fixed errors with interchange builder and set based objects

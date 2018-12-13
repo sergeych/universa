@@ -59,6 +59,38 @@ describe Contract do
     c.check.should be_truthy
   end
 
+  include TestKeys
+
+  it "splits to a new owner without his signature" do
+    r0 = create_coin 10000, issuer_key: @private_key
+    r0.check().should be_truthy
+    r1a = r0.createRevision(@private_key)
+    r1a.amount -= 42
+    r1b = r1a.split(1)[0]
+    r1b.owner = testKeys[1].public_key
+    r1b.amount = 42
+    r1a.seal()
+    r1a.check()
+    r1a.trace_errors
+    r1a.is_ok.should be_truthy
+
+    # lets perform the full check of the pack
+    tp = TransactionPack.unpack(r1a.packed)
+    c = tp.getContract
+    if !c.check()
+      c.trace_errors
+      fail("unpacked transaction is not valid")
+    end
+  end
+
+  it "big in invoke_static should be fixed" do
+    pending "UMI invoke_static bug"
+    token = Service.umi.invoke_static "ContractsService", "createTokenContract",
+                                      Set.new([@private_key]), Set.new([@private_key.public_key]),
+                                      "100000"
+    pp token
+  end
+
   it "has proper state and transactional" do
     c = Contract.create(@private_key)
     c = Contract.from_packed(c.seal)
@@ -74,8 +106,61 @@ describe Contract do
     id1 = c.hash_id
     id2 = HashId.from_string(c.hash_id.to_s)
     id1.should == id2
-    hash = { id1 => 17 }
+    hash = {id1 => 17}
     hash[id2].should == 17
   end
 
+  def create_coin(value, issuer_key:, owner: nil)
+    currency = "token_test"
+    owner ||= issuer_key.public_key
+
+    c = Contract.create issuer_key, expires_at: Time.now + 3600 * 24 * 90
+    d = c.definition
+    s = c.state
+    d[:name] = "Ultra #{currency}"
+    d[:original_currency] = currency
+    d[:currency] = currency
+    d[:short_currency] = currency
+    d[:description] = "This is a test asset for universa gem"
+    c.owner = owner if owner
+
+    amount = value.to_s
+    amount.force_encoding 'utf-8'
+    s[:amount] = amount
+
+    # tricky part: mintable splitjoin
+    c.add_permission SplitJoinPermission.new(
+        c.owner.link_as("@owner"),
+        Binder.of(
+            {
+                field_name: 'amount',
+                min_value: "0.000000000000000001",
+                min_unit: "0.000000000000000001",
+                join_match_fields: [
+                    "definition.data.currency",
+                    "definition.data.original_currency",
+                    # and issued by the same issuer
+                    "definition.issuer"
+                ]
+            }
+        )
+    )
+    c.seal()
+    c
+  end
+
+
+end
+
+class TestInit
+  def initialize *args
+    pp args
+  end
+end
+
+class TestInit2 < TestInit
+  def initialize *args
+    pp args
+    super
+  end
 end
