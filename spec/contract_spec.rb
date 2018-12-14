@@ -83,6 +83,41 @@ describe Contract do
     end
   end
 
+  it "splits with late signature" do
+    r0 = create_coin 10000, issuer_key: @private_key
+    r0.check().should be_truthy
+
+    payer = @private_key
+    payee = testKeys[1].public_key
+
+    r1a = r0.createRevision()
+    r1a.amount -= 42
+    # r1a owner is not changed
+    #
+    r1b = r1a.split(1)[0]
+    r1b.amount = 42
+    r1b.owner = payee.short_address
+
+    # make it binary
+    r1a.seal()
+
+    # at this point we get the owner key, so we add signature to sealed binary:
+    # (this is Java API method, direct call)
+    r1a.addSignatureToSeal(payer)
+
+    r1a.check()
+    r1a.trace_errors
+    r1a.is_ok.should be_truthy
+
+    # lets perform the full check of the pack
+    tp = TransactionPack.unpack(r1a.packed)
+    c = tp.getContract
+    if !c.check()
+      c.trace_errors
+      fail("unpacked transaction is not valid")
+    end
+  end
+
   it "big in invoke_static should be fixed" do
     pending "UMI invoke_static bug"
     token = Service.umi.invoke_static "ContractsService", "createTokenContract",
