@@ -62,12 +62,14 @@ describe Contract do
   include TestKeys
 
   it "splits to a new owner without his signature" do
+    owner_b = test_keys[1]
+
     r0 = create_coin 10000, issuer_key: @private_key
     r0.check().should be_truthy
     r1a = r0.createRevision(@private_key)
     r1a.amount -= 42
     r1b = r1a.split(1)[0]
-    r1b.owner = testKeys[1].public_key
+    r1b.owner = owner_b.public_key
     r1b.amount = 42
     r1a.seal()
     r1a.check()
@@ -81,6 +83,25 @@ describe Contract do
       c.trace_errors
       fail("unpacked transaction is not valid")
     end
+
+    owner_c = test_keys[2]
+
+    r2a = r1b.createRevisionWithAddress([owner_b.short_address])
+    r2a.should_not be_nil
+
+    r2b = r2a.split(1)[0]
+
+    r2a.amount -= 4
+    r2b.amount = 4
+    r2b.owner = owner_c.short_address
+
+    r2a.seal()
+
+    r2a.addSignatureToSeal(owner_b)
+
+    r2a.check()
+    r2a.trace_errors
+    r2a.should be_ok
   end
 
   it "splits with late signature" do
@@ -88,12 +109,12 @@ describe Contract do
     r0.check().should be_truthy
 
     payer = @private_key
-    payee = testKeys[1].public_key
+    payee = test_keys[1].public_key
 
     r1a = r0.createRevision()
     r1a.amount -= 42
     # r1a owner is not changed
-    #
+
     r1b = r1a.split(1)[0]
     r1b.amount = 42
     r1b.owner = payee.short_address

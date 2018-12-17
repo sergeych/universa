@@ -235,30 +235,38 @@ module Universa
     # convert ruby arguments array to corresponding UMI values
     def prepare_args args
       raise "pp bug" if args == [:pretty_print] # this often happens whilte tracing
-      args.map {|x|
-        if x.respond_to?(:_as_umi_arg)
-          x._as_umi_arg(self)
-        else
-          case x
-            when Set
-              # Make a Java Set
-              r = call("instantiate", "Set", x.to_a.map {|i| i._as_umi_arg(self)})
-              # Ref will garbage collect it
-              Ref.new(self, r)
-              # but we need a ref struct only:
-              r
-            when Time
-              {__type: 'unixtime', seconds: x.to_i}
-            when String
-              x.encoding == Encoding::BINARY ? {__type: 'binary', base64: Base64.encode64(x)} : x
-            when RemoteAdapter
-              # this need special treatment with direct call:
-              x.__getobj__._as_umi_arg(self)
-            else
-              x
-          end
+      args.map {|x| prepare x }
+    end
+
+    # convert single argument to UMI value to pass
+    def prepare(x)
+      if x.respond_to?(:_as_umi_arg)
+        x._as_umi_arg(self)
+      else
+        case x
+          when Array
+            # deep convert all array items
+            x.map{|a| prepare a }
+          when Set
+            # Make a Java Set
+            r = call("instantiate", "Set", x.to_a.map {|i| i._as_umi_arg(self)})
+            # Ref will garbage collect it
+            Ref.new(self, r)
+            # but we need a ref struct only:
+            r
+          when Time
+            {__type: 'unixtime', seconds: x.to_i}
+          when String
+            x.encoding == Encoding::BINARY ? {__type: 'binary', base64: Base64.encode64(x)} : x
+          when Ref
+            x._as_umi_arg(self)
+          when RemoteAdapter
+            # this need special treatment with direct call:
+            x.__getobj__._as_umi_arg(self)
+          else
+            x
         end
-      }
+      end
     end
 
     # Convert remote call result from UMI structures to ruby types

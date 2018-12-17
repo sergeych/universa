@@ -31,7 +31,7 @@ describe Universa::FSStore::FileStore do
     store.count.should == 0
 
     cc = 5.times.map {
-      c = Contract.create testKeys[0]
+      c = Contract.create test_keys[0]
       c.seal()
       store << c
       c

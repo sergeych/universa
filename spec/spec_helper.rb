@@ -25,7 +25,7 @@ end
 
 module TestKeys
 
-  def testKeys
+  def test_keys
     # $testKeys ||= 10.times.map { PrivateKey.new 2048 }
     # $testKeys.each { |k|
     #   puts "keys << PrivateKey.from_packed( <<End\n#{Base64.encode64(k.pack)}End\n)"
