@@ -140,11 +140,11 @@ describe Contract do
   end
 
   it "big in invoke_static should be fixed" do
-    pending "UMI invoke_static bug"
+    # pending "UMI invoke_static bug"
     token = Service.umi.invoke_static "ContractsService", "createTokenContract",
                                       Set.new([@private_key]), Set.new([@private_key.public_key]),
-                                      "100000"
-    pp token
+                                      BigDecimal.new(100000)
+    token.should_not be_nil
   end
 
   it "has proper state and transactional" do
