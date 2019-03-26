@@ -79,7 +79,7 @@ module Universa
     # Rescan the network collecting the networ map comparing results from random 70% of nodes.
     def scan_network
       # Todo: cache known nodes
-      root_nodes = (1..30).map {|n| "http://node-#{n}-com.universa.io:8080/network"}
+      root_nodes = (1..30).map {|n| "http://node-#{n}-com.utoken.io:8080/network"}
 
       # We scan random 70% for consensus
       n = root_nodes.size * 0.7
