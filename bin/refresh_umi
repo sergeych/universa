@@ -2,7 +2,7 @@
 
 rm download > /dev/null
 
-wget https://files.universa.io/s/ecz6fDT7ny634Xj/download
+wget https://files.universablockchain.com /s/ecz6fDT7ny634Xj/download
 
 rm -rd -f ./bin/umi >/dev/null 2>&1
 rm -rd -f ./bin/umi-* >/dev/null 2>&1
