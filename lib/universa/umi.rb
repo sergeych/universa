@@ -90,6 +90,13 @@ module Universa
       @version.version
     end
 
+    # @return Universa network library core version
+    def core_version
+      @core_version ||= begin
+        invoke_static "Core", "VERSION"
+      end
+    end
+
     # Create instance of some Universa Java API class, for example 'Contract', passing any arguments
     # to its constructor. The returned reference could be used much like local instance, nu the actual
     # work will happen in the child process. Use references as much as possible as they take all the
@@ -235,7 +242,7 @@ module Universa
     # convert ruby arguments array to corresponding UMI values
     def prepare_args args
       raise "pp bug" if args == [:pretty_print] # this often happens whilte tracing
-      args.map {|x| prepare x }
+      args.map {|x| prepare x}
     end
 
     # convert single argument to UMI value to pass
@@ -246,7 +253,7 @@ module Universa
         case x
           when Array
             # deep convert all array items
-            x.map{|a| prepare a }
+            x.map {|a| prepare a}
           when Set
             # Make a Java Set
             r = call("instantiate", "Set", x.to_a.map {|i| i._as_umi_arg(self)})

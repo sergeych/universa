@@ -15,7 +15,7 @@ module Universa
       @config = SmartHash.new path: nil
       @known_proxies = {}
       [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder, Role, ChangeOwnerPermission, RevokePermission,
-       SplitJoinPermission].each {|klass| register_proxy klass}
+       SplitJoinPermission, UmiClient].each {|klass| register_proxy klass}
     end
 
     # Implementation of {Service.configure}
@@ -82,8 +82,8 @@ module Universa
   # the remote to create remote instance.
   class RemoteAdapter < Delegator
 
-    # Instantiate new proxy object passing arguments to the remote constructor. The UMO host will try
-    # ot find overloaded constructor that matches the arguments.
+    # Instantiate new proxy object passing arguments to the remote constructor. The UMI host will try
+    # to find overloaded constructor that matches the arguments.
     #
     # @param [*Any] args any arguments that remote constructor may accept.
     def initialize(*args)

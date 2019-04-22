@@ -13,6 +13,8 @@ RSpec.describe Universa do
 
   it "has a version number" do
     expect(Universa::VERSION).not_to be nil
+    (@umi.version =~ /^(\d+)\.(\d+\.\d+)$/).should be_truthy
+    $2.to_f.should >= 8.24
   end
 
   it "provides references to universa library objects" do

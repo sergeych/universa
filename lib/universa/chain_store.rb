@@ -4,7 +4,7 @@ module Universa
 
   # The storage interface capable to store contracts in chains, providing search and attributes.
   # This class is not a store itself but the base class for it, having common boilerplate and
-  # sort of interface to implement.
+  # sort of interface to implement. _Under development, we might change it_
   class ChainStore
 
     # Save contract to the store. When this method returns, the contract must me already stored.
