@@ -75,6 +75,26 @@ module Universa
       s.force_encoding 'binary'
       s
     end
+
+    # Compare KeyAddress with another KeyAddress or its string or even binary representation.
+    # Analyzes string length to select proper strategy.
+    def == other
+      if other.is_a?(KeyAddress)
+        super
+      elsif other.is_a?(String)
+        case other.size
+          when 37, 53
+            # it is for sure packed representation
+            packed == other
+          else
+            # is should be string representation then
+            to_s == other
+        end
+      else
+        false
+      end
+    end
+
   end
 
 end
