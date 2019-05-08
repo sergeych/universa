@@ -113,8 +113,10 @@ module Universa
 
   end
 
+  # The connection to a single Universa node.
   class Connection
 
+    # Do not create it direcly, use {Client#random_connection}, {Client#random_connections} or {Client#[]} instead
     def initialize umi_client
       @client = umi_client
     end

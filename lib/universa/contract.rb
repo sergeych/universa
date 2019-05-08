@@ -53,7 +53,7 @@ module Universa
     #
     # @param [String] string_id id string representation, like from +hash_id_instance.to_s+. See {#to_s}.
     def self.from_string(string_id)
-      string_id.force_encoding('utf-8').gsub('-','+').gsub('_','/')
+      string_id.force_encoding('utf-8').gsub('-', '+').gsub('_', '/')
       invoke_static 'with_digest', string_id
     end
 
@@ -80,7 +80,7 @@ module Universa
     # Could be decoded safely back with {HashId.from_string} but not (most likely) with JAVA API itself
     # @return [String] RFC3548 modified base64
     def to_url_safe_string
-      Base64.encode64(get_digest).gsub(/\s/, '').gsub('/','_').gsub('+', '-')
+      Base64.encode64(get_digest).gsub(/\s/, '').gsub('/', '_').gsub('+', '-')
     end
 
     # To use it as a hash key_address.
@@ -92,6 +92,21 @@ module Universa
     # To use it as a hash key_address. Same as this == other.
     def eql? other
       self == other
+    end
+
+    # Compare hashid with string representation, binary representation or another HashId instance
+    # automatically.
+    def == other
+      return false if other == nil
+      if other.is_a?(Universa::HashId)
+        super
+      else
+        if other.size == 96
+          bytes == other
+        else
+          to_s == other
+        end
+      end
     end
 
   end
@@ -277,6 +292,13 @@ module Universa
       revoke.seal
       revoke
     end
+
+    # Ruby-style contracts equality.
+    def == other
+      return false if !other || !other.is_a?(Contract)
+      hash_id == other.hash_id
+    end
+
 
   end
 

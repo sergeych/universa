@@ -15,6 +15,7 @@ describe Contract do
 
     c1 = Contract.from_packed(c.packed)
     c1.hash_id.should == c.hash_id
+    c1.should == c
     c1.expires_at.should > (Time.now + 120)
 
     c1.hash_id.should_not be_nil
@@ -164,6 +165,19 @@ describe Contract do
     id1.should == id2
     hash = {id1 => 17}
     hash[id2].should == 17
+  end
+
+  it "should easily compare HashId" do
+    c = Contract.create(@private_key)
+    c.seal()
+    id1 = c.hash_id
+    id2 = HashId.from_string(c.hash_id.to_s)
+
+    id1.should == id2
+    id1.should == id2.to_s
+    id1.should == id2.bytes
+    id2.bytes.should == id1
+    id2.to_s.should == id1
   end
 
   def create_coin(value, issuer_key:, owner: nil)
