@@ -136,14 +136,7 @@ module Universa
     #
     # @return [Hash] hashie with TCP and UDP fields holding ping time in millis, -1 if not available
     def ping_node(node_number, timeout: 5000)
-      # result = Hashie::Mash.new(@client.command("pingNode", 'nodeNumber', node_number.to_i, "timeout", timeout.to_i).to_h)
-      result = Hashie::Mash.new(@client.pingNode(node_number, timeout).to_h)
-      p result
-      if result.__type == "ItemResult"
-        # this is a hack to cope with a stupid error in the java libraries, to be removed!
-        #
-      end
-      result
+      Hashie::Mash.new(@client.pingNode(node_number, timeout).to_h)
     end
 
     # Check the connected node is alive. It is adivesd to call {restart} on nodes that return false on pings
