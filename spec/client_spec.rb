@@ -14,9 +14,22 @@ describe Client do
     @client.size.should > 10
     @client.should be_a_kind_of(Client)
     rc = @client.random_connection
-             rc.should be_a_kind_of(Connection)
+    rc.should be_a_kind_of(Connection)
     rc.ping.should be_truthy
     rc.url.should =~ /http/
+    # there is no more node 31
+    expect(->{rc.ping_node 31}).to raise_error(Farcall::RemoteError)
+  end
+
+  it "ping nodes" do
+    rc1, rc2 = @client.random_connections(2)
+    # puts "ping #{rc1.node_number} -> #{rc2.node_number}"
+    res = rc1.ping_node(rc2.node_number)
+    res.UDP.should >= 0
+    res.TCP.should >= 0
+    # p res
+    # p res.TCP
+    # p res.UDP
   end
 
   context "with direct access" do
