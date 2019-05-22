@@ -1,7 +1,9 @@
 # Universa
 
-> Alfa state: direct full access to Java API ready for test, started adapter of remote objects - syntax sugar 
+> beta state: direct full access to Java API ready for test, started adapter of remote objects - syntax sugar 
 for direct access to remote objects.
+
+__attention__ since this release version numbers match the Universa Core library version included. 
 
 This is an under-construction official gem from [Universa][universa] to facilitate access to the
 Java library using Universa's UMI protocol and Universa client services.
