@@ -63,6 +63,8 @@ describe Service do
         b1 = Binder.of( "foo" => "bar")
         b2 = Binder.of( "foo" => "bar", "bar" => b1)
         b2[:bar][:foo].should == 'bar'
+        b2 = Binder.of( "foo" => "bar", "bar" => {"foobar" => "foobaz"})
+        b2[:bar][:foobar].should == 'foobaz'
       end
 
     end
