@@ -144,7 +144,7 @@ describe Contract do
     # pending "UMI invoke_static bug"
     token = Service.umi.invoke_static "ContractsService", "createTokenContract",
                                       Set.new([@private_key]), Set.new([@private_key.public_key]),
-                                      BigDecimal.new(100000)
+                                      BigDecimal(100000)
     token.should_not be_nil
   end
 

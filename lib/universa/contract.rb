@@ -238,7 +238,7 @@ module Universa
     # Helper for many token-like contracts containing state.data.amount
     # @return [BigDecimal] amount or nil
     def amount
-      v = state[:amount] and BigDecimal.new(v.to_s)
+      v = state[:amount] and BigDecimal(v.to_s)
     end
 
     # Write helper for many token-like contracts containing state.data.amount. Saves value

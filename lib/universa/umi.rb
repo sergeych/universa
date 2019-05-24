@@ -241,7 +241,7 @@ module Universa
 
     # convert ruby arguments array to corresponding UMI values
     def prepare_args args
-      raise "pp bug" if args == [:pretty_print] # this often happens whilte tracing
+      raise "pp bug" if args == [:pretty_print] # this often happens while tracing
       args.map {|x| prepare x}
     end
 
@@ -270,6 +270,10 @@ module Universa
           when RemoteAdapter
             # this need special treatment with direct call:
             x.__getobj__._as_umi_arg(self)
+          when Hash
+            result = {}
+            x.each { |k,v| result[k] = prepare(v)}
+            result
           else
             x
         end

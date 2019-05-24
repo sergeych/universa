@@ -59,6 +59,12 @@ describe Service do
         b.to_h.should == { 'hello' => 1}
       end
 
+      it "let binder include binder" do
+        b1 = Binder.of( "foo" => "bar")
+        b2 = Binder.of( "foo" => "bar", "bar" => b1)
+        b2[:bar][:foo].should == 'bar'
+      end
+
     end
 
     it "create and restore proxy objects" do
