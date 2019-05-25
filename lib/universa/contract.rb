@@ -12,6 +12,7 @@ module Universa
     remote_class "com.icodici.universa.contract.permissions.RevokePermission"
   end
 
+  # Adapter for plitjoin permission
   class SplitJoinPermission < RemoteAdapter
     remote_class "com.icodici.universa.contract.permissions.SplitJoinPermission"
   end
@@ -19,7 +20,33 @@ module Universa
   # Adapter for Universa Role
   class Role < RemoteAdapter
     remote_class "com.icodici.universa.contract.roles.Role"
+
+    class RequireMode
+      ALL_OF = "ALL_OF"
+      ANY_OF = "ANY_OF"
+    end
   end
+
+  # Adaoter for link role
+  class RoleLink < RemoteAdapter
+    remote_class "com.icodici.universa.contract.roles.RoleLink"
+  end
+
+  # adapter for a simple (key owner) role
+  class SimpleRole < RemoteAdapter
+    remote_class "com.icodici.universa.contract.roles.SimpleRole"
+  end
+
+  # adapter for a role that is a list of roles
+  class ListRole < RemoteAdapter
+    remote_class "com.icodici.universa.contract.roles.ListRole"
+  end
+
+  # Adapter for permission to modify data
+  class ModifyDataPermission < RemoteAdapter
+    remote_class "com.icodici.universa.contract.permissions.ModifyDataPermission"
+  end
+
 
   # Wrapper for Java API Reference class
 
@@ -74,6 +101,13 @@ module Universa
       string_id.force_encoding('utf-8').gsub('-', '+').gsub('_', '/')
       invoke_static 'with_digest', string_id
     end
+
+    # Create a random HashId
+    # @return [HashId] random HashId
+    def self.create_random
+      invoke_static 'create_random'
+    end
+
 
     # Get binary representation. It is shorter than string representation but contain non-printable characters and
     # can cause problems if treated like a string. Use {#to_s} to get string representation instead.
