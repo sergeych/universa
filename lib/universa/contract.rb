@@ -21,6 +21,24 @@ module Universa
     remote_class "com.icodici.universa.contract.roles.Role"
   end
 
+  # Wrapper for Java API Reference class
+
+  class Reference < RemoteAdapter
+    remote_class "com.icodici.universa.contract.Reference"
+
+    remote_field :name, :type, :transactional_id, :contract_id, :required, :origin, :signed_by, :fields, :roles,
+                 :matchingItems
+
+    alias matching_items matchingItems
+
+    ALL_OF = 'all_of'
+    ANY_OF = 'any_of'
+    SIMPLE_CONDITION = 'simple_condition'
+
+    TYPE_TRANSACTIONAL = 1
+    TYPE_EXISTING_DEFINITION = 2
+    TYPE_EXISTING_STATE = 3
+  end
 
   # adapter for Universa TransactionPack
   class TransactionPack < RemoteAdapter

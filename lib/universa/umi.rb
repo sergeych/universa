@@ -122,6 +122,19 @@ module Universa
       encode_result call("invoke", class_name, method.to_s.camelize_lower, *prepare_args(args))
     end
 
+    def get_field(remote_object, name)
+      encode_result call("get_field", remote_object._remote_id, name)
+    end
+
+    def set_field(remote_object, name, value)
+      call("set_field", remote_object._remote_id, name, prepare(value))
+      value
+    end
+
+    def invoke_static(class_name, method, *args)
+      encode_result call("invoke", class_name, method.to_s.camelize_lower, *prepare_args(args))
+    end
+
     # Close child process. No remote calls should occur after it.
     def close
       @queue.push :poison_pill

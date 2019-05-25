@@ -143,6 +143,19 @@ module Universa
     def self.invoke_static(method_name, *args)
       Service.umi.invoke_static @remote_class_name, method_name, *args
     end
+
+    def self.remote_field *names
+      names.each {|name|
+        class_eval <<-End
+          def #{name}
+            Service.umi.get_field(self,"#{name}")
+          end
+          def #{name}=(value)
+            Service.umi.set_field(self,"#{name}", value)
+          end
+          End
+      }
+    end
   end
 
 end

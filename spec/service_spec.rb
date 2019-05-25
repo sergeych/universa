@@ -67,6 +67,20 @@ describe Service do
         b2[:bar][:foobar].should == 'foobaz'
       end
 
+      it "let access Role data members" do
+        r = Reference.new
+        r.name.should == ""
+        r.name = "foobar"
+        r.name.should == "foobar"
+        Reference::ALL_OF.should == 'all_of'
+        Reference::ANY_OF.should == 'any_of'
+        Reference::SIMPLE_CONDITION.should == 'simple_condition'
+        r.type.should == Reference::TYPE_EXISTING_DEFINITION
+        r.transactional_id.should be_empty
+        r.origin.should be_nil
+        r.matching_items.should == []
+      end
+
     end
 
     it "create and restore proxy objects" do
