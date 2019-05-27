@@ -59,12 +59,51 @@ describe Service do
         b.to_h.should == { 'hello' => 1}
       end
 
+      it "allow nesting objects" do
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", b1)
+        b2[:bar].should be_instance_of(Binder)
+        b2[:bar].should == b1
+        b3 = Binder.of "l3", b2
+        b3[:l3].should be_instance_of(Binder)
+        b3[:l3].should == b2
+        b3[:l3][:bar].should be_instance_of(Binder)
+        b3[:l3][:bar].should == b1
+      end
+
+      it "nested binder in array" do
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", [1, b1])
+        b2[:bar][1].should be_instance_of(Binder)
+        b2[:bar][1].should == b1
+        b3 = Binder.of("baz": [1, [2, [3, b1]]])
+        b3[:baz][1][1][1].should be_instance_of(Binder)
+        b3[:baz][1][1][1].should == b1
+      end
+
+      it "allow fined in hash" do
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", { first: b1})
+        b2[:bar]['first'].should be_instance_of(Binder)
+        b2[:bar]['first'].should == b1
+      end
+
       it "let binder include binder" do
-        b1 = Binder.of( "foo" => "bar")
-        b2 = Binder.of( "foo" => "bar", "bar" => b1)
-        b2[:bar][:foo].should == 'bar'
-        b2 = Binder.of( "foo" => "bar", "bar" => {"foobar" => "foobaz"})
-        b2[:bar][:foobar].should == 'foobaz'
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", Binder.of("buzz": b1))
+        b2[:bar]['buzz'].should be_instance_of(Binder)
+        b2[:bar]['buzz'].should == b1
+      end
+
+      it "support nested binders in arguments" do
+        b1 = Binder.of( "foo" => "bar", "bar" => Binder.of("foo" => "bar"))
+        b1[:bar][:foo].should == 'bar'
+      end
+
+      it "initializes binder with hash" do
+        a = Binder.of(foo: 'bar', bar: { buzz: 'ok'})
+        a.foo.should == 'bar'
+        a.bar[:buzz].should == 'ok'
       end
 
       it "let access Role data members" do

@@ -260,7 +260,9 @@ module Universa
 
     # convert single argument to UMI value to pass
     def prepare(x)
+      # p [:pre, x]
       if x.respond_to?(:_as_umi_arg)
+        # p ["uniarg"]
         x._as_umi_arg(self)
       else
         case x
@@ -279,13 +281,16 @@ module Universa
           when String
             x.encoding == Encoding::BINARY ? {__type: 'binary', base64: Base64.encode64(x)} : x
           when Ref
+            # p [:ref]
             x._as_umi_arg(self)
           when RemoteAdapter
+            # p [:ra, x.__getobj__._as_umi_arg(self)]
             # this need special treatment with direct call:
             x.__getobj__._as_umi_arg(self)
           when Hash
+            # p [:hash]
             result = {}
-            x.each { |k,v| result[k] = prepare(v)}
+            x.each {|k, v| result[k] = prepare(v)}
             result
           else
             x
@@ -296,7 +301,7 @@ module Universa
     # Convert remote call result from UMI structures to ruby types
     def encode_result value
       case value
-        when Hashie::Mash
+        when Hash
           type = value.__type
           case type
             when 'RemoteObject';
@@ -306,7 +311,8 @@ module Universa
             when 'unixtime';
               Time.at(value.seconds)
             else
-              value
+              # Deep hash conversion
+              value.transform_values! {|v| encode_result(v)}
           end
         when Hashie::Array
           value.map {|x| encode_result x}

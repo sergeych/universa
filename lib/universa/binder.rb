@@ -20,8 +20,8 @@ module Universa
     end
 
     # Create hew Binder from any hash. Keys will be converted to strings.
-    def self.of hash
-      invoke_static "of", hash.transform_keys(&:to_s)
+    def self.of *args
+      invoke_static "of", *args
     end
 
     # Retrieve binder keys
