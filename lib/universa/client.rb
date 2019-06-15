@@ -67,14 +67,37 @@ module Universa
       (0...size).to_a.sample(number).map {|n| self[n]}
     end
 
-    # Perform fast consensus state check with a given trust level, as the fraction of the whole network size.
-    # It checks the network nodes randomly until get enough positive or negative states. The lover the required
-    # trust level is, the faster the answer will be found.
+    # Perform fast consensus state check with a given trust level, determining whether the item is approved or not.
+    # Blocks for 1 minute or until the network solution will be collected for a given trust level.
     #
-    # @param [Contract | HashId] obj contract to check
+    # @param [Contract | HashId | String | Binary] obj contract to check
     # @param [Object] trust level, should be between 0.1 (10% of network) and 0.9 (90% of the network)
-    # @return [ContractState] of some final node check It does not calculates average time (yet)
-    def get_state obj, trust: 0.3
+    # @return true if the contract state is approved by the network with a given trust level, false otherwise.
+    def is_approved? obj, trust: 0.3
+      hash_id = case obj
+                  when HashId
+                    obj
+                  when Contract
+                    obj.hash_id
+                  when String
+                    if obj.encoding == Encoding::ASCII_8BIT
+                      HashId.from_digest(obj)
+                    else
+                      HashId.from_string(obj)
+                    end
+                  else
+                    raise ArgumentError "wrong type of object to check approval"
+                end
+      @client.isApprovedByNetwork(hash_id, trust.to_f, 60000)
+    end
+      # Perform fast consensus state check with a given trust level, as the fraction of the whole network size.
+      # It checks the network nodes randomly until get enough positive or negative states. The lover the required
+      # trust level is, the faster the answer will be found.
+      #
+      # @param [Contract | HashId] obj contract to check
+      # @param [Object] trust level, should be between 0.1 (10% of network) and 0.9 (90% of the network)
+      # @return [ContractState] of some final node check It does not calculates average time (yet)
+      def get_state obj, trust: 0.3
       raise ArgumentError, "trusst must be in 0.1..0.9 range" if trust < 0.1 || trust > 0.9
       result = Concurrent::IVar.new
       negative_votes = Concurrent::AtomicFixnum.new((size * 0.1).round + 1)

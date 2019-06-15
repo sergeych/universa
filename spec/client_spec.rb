@@ -70,6 +70,10 @@ describe Client do
       state.errors.should be_empty
       state.errors?.should be_falsey
       @client.get_state(contract).should be_approved
+      @client.is_approved?(contract).should be_truthy
+      @client.is_approved?(contract.hash_id).should be_truthy
+      @client.is_approved?(contract.hash_id.to_s).should be_truthy
+      @client.is_approved?(contract.hash_id.bytes).should be_truthy
 
       rev = contract.createRevocation(@test_access_key)
       state = @client.register_single(rev)
@@ -77,6 +81,7 @@ describe Client do
 
       state = @client.get_state(contract)
       state.should_not be_approved
+      @client.is_approved?(contract).should_not be_truthy
       state.state.should == 'REVOKED'
     end
   end
