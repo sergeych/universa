@@ -11,7 +11,7 @@ module Universa::FSStore
   # @!method amount
   #   @return [BigDecimal] +contract.state.data.amount+ or nil. See {Contract#amount} for more.
   #
-  class Entry < Universa::StoredContract
+  class Entry < Universa::StoredContractBase
 
     extend Forwardable
 
