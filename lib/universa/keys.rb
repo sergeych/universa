@@ -35,7 +35,7 @@ module Universa
   end
 
   # A +com.icodici.crypto.PublicKey+ extension. As the key is immutable,
-  # caching is used to avoid innecessary UMI calls.
+  # caching is used to avoid unnecessary UMI calls.
   class PublicKey < RemoteAdapter
     remote_class 'com.icodici.crypto.PublicKey'
 
@@ -47,6 +47,39 @@ module Universa
     # @return [KeyAddress] long address
     def long_address
       @long_address ||= get_long_address()
+    end
+  end
+
+  # A +com.icodici.crypto.SymmetricKey+ extension. As the key is immutable,
+  # caching is used to avoid unnecessary UMI calls.
+  class SymmetricKey < RemoteAdapter
+    remote_class 'com.icodici.crypto.SymmetricKey'
+
+    # Derive key from password using PBKDF2 standard
+    # @param [String] password to derive key from
+    # @param [Object] rounds derivation rounds
+    # @param [Object] salt optional salt used to disallow detect password match by key match
+    # @return [SymmetricKey] instance
+    def self.from_password(password, rounds, salt=nil)
+      salt.force_encoding(Encoding::BINARY) if salt
+      invoke_static 'fromPassword', password, rounds, salt
+    end
+
+    # How many bits contains the key
+    # @return [Integer] size in bits
+    def size_in_bits
+      @bit_strength ||= getBitStrength()
+    end
+
+    # @return [Integer] size in bytes
+    def size
+      @size ||= getSize()
+    end
+
+    # Get the key as binary string
+    # @return [String] key bytes (binary string)
+    def key
+      @key ||= getKey()
     end
   end
 

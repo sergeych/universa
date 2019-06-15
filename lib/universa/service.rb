@@ -156,6 +156,14 @@ module Universa
           End
       }
     end
+
+    def self.static_method name
+      class_eval <<-End
+        def self.#{name} *args
+          invoke_static "#{name.to_s}", *args
+        end
+      End
+    end
   end
 
 end

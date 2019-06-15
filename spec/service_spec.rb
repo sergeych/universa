@@ -153,6 +153,30 @@ describe Service do
       # key1.short_address.should
     end
 
+    it "has symmetric keys" do
+      sk = SymmetricKey.new
+      sk.size_in_bits.should == 256
+      sk.size.should == 32
+      sk.key.size.should == 32
+
+      sk1 = SymmetricKey.new(sk.key)
+      sk1.should == sk
+
+      pk1 = SymmetricKey.from_password 'hello', 1000
+      pk2 = SymmetricKey.from_password 'hello', 1000
+      pk3 = SymmetricKey.from_password 'hello', 1001
+      pk4 = SymmetricKey.from_password 'hello', 1000, "salted!"
+      pk5 = SymmetricKey.from_password 'hello', 1000, "salted!"
+
+      pk3.should_not == pk1
+      pk2.should == pk1
+      pk4.should_not == pk1
+      pk5.should == pk4
+
+      # sk = Service.umi.instantiate "com.icodici.crypto.SymmetricKey"
+      # p sk
+    end
+
   end
 
 
