@@ -93,7 +93,7 @@ module Universa
     # @return Universa network library core version
     def core_version
       @core_version ||= begin
-        invoke_static "Core", "VERSION"
+        invoke_static "Core", "getVersion"
       end
     end
 
@@ -331,15 +331,25 @@ module Universa
     # perform UMI remote call
     def call(command, *args)
       log ">> #{command}(#{args})"
-      result = @endpoint.sync_call(command, *args, **EMPTY_KWARGS)
-      log "<< #{result}"
-      result
-    rescue Farcall::RemoteError => e
-      case e.remote_class
-        when 'NoSuchMethodException'
-          raise NoMethodError, e.message
-        else
-          raise
+      # result = @endpoint.sync_call(command, *args, **EMPTY_KWARGS)
+
+      mx = Mutex.new
+      cv = ConditionVariable.new()
+      error, result = nil, nil
+      mx.synchronize {
+        @endpoint.call(command, *args, **EMPTY_KWARGS) { |_error, _result|
+          error, result = _error, _result
+          mx.synchronize{ cv.signal }
+        }
+        cv.wait(mx)
+      }
+      if error
+        log "<<**ERROR #{error}"
+        raise NoMethodError, error.message  if (cls = error[:class]) == 'NoSuchMethodException'
+        raise Farcall::RemoteError.new(cls, error.text)
+      else
+        log "<< #{result}"
+        result
       end
     end
 

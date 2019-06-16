@@ -1,3 +1,5 @@
+using Universa::Parallel
+
 describe Service do
 
   # it "should have single instance" do
@@ -172,9 +174,17 @@ describe Service do
       pk2.should == pk1
       pk4.should_not == pk1
       pk5.should == pk4
+    end
 
-      # sk = Service.umi.instantiate "com.icodici.crypto.SymmetricKey"
-      # p sk
+    it "provides many keys in parallel" do
+      N = 8
+      tt = N.times.map {
+        Thread.start {
+          (4*64/N).times{PrivateKey.new(2048)}
+        }
+      }
+      tt.size.should == N
+      tt.each(&:join)
     end
 
   end
