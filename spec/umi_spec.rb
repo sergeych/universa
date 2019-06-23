@@ -1,6 +1,7 @@
 describe UMI do
 
   before :all do
+    # UMI.session_log_path = "session-log.txt"
     @umi = Service.umi
   end
 

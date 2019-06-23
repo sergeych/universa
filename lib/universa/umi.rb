@@ -49,6 +49,14 @@ module Universa
   #
   class UMI
 
+    @@session_log_path = nil
+
+    # Set the detault UMI session log path (including file) that will be used if no log parameter will be passed
+    # to the UMI constructor
+    def self.session_log_path= path
+      @@session_log_path = path
+    end
+
     ##
     # Create UMI instance. It starts the private child process wit UMI server and securely connects to
     # it so no other connection could occur.
@@ -65,7 +73,8 @@ module Universa
     # @param [String] system expected on the remote side. 'UMI' us a universa umi server.
     # @param [Boolean] convert_case it true, convert ruby style snake case `get_some_stuff()` to java style lower camel
     #                  case `getSomeStuff()` while calling methods. Does not affect class names on {instantiate}.
-    def initialize(path = nil, version_check: /./, system: "UMI", log: 'sessionlog.txt', convert_case: true, factory: nil)
+    def initialize(path = nil, version_check: /./, system: "UMI", log: nil, convert_case: true, factory: nil)
+      log ||= @@session_log_path
       path ||= File.expand_path(File.split(__FILE__)[0] + "/../../bin/umi/bin/umi")
       @in, @out, @err, @wtr = Open3.popen3("#{path} #{log ? "-log #{log}" : ''}")
       @endpoint = Farcall::Endpoint.new(
