@@ -10,8 +10,6 @@ module Universa
     end
   end
 
-  include Checks
-
   # Adapter for  java.time.Duration class used in some Universa calls
   class Duration < RemoteAdapter
     remote_class "java.time.Duration"
@@ -29,6 +27,7 @@ module Universa
 
     static_method :initSecureLoan
 
+    extend Checks
 
     # initSecureLoan with named arguments and type checks.
     # 
