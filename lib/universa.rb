@@ -10,6 +10,7 @@ require "universa/contract"
 require "universa/client"
 require 'universa/stored_contract'
 require "universa/chain_store"
+require "universa/universa_helpers"
 require "universa/fs_store/file_store"
 
 # The Universa gem

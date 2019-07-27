@@ -8,14 +8,26 @@ module Universa
   # As UMI server is multithreaded by nature, is will not block ruby threads waiting for remote
   # invocation.
   class Service
+
+    @@log_umi = false
+
+    # set log mode for UMI commands. Works only when called before any Service usage, e.g. before the
+    # UMI client has been constructed.
+    def self.log_umi
+      @@log_umi = true
+    end
+
     include Singleton
 
     # Setup service initial parameters
     def initialize
       @config = SmartHash.new path: nil
+      @@log_umi && @config['log'] = 'umi.log'
       @known_proxies = {}
-      [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder, Role, ChangeOwnerPermission, RevokePermission,
-       SplitJoinPermission, UmiClient].each {|klass| register_proxy klass}
+      [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder,
+       Role, SimpleRole, RoleLink, ListRole,
+       ChangeOwnerPermission, RevokePermission, ModifyDataPermission,  SplitJoinPermission,
+       UmiClient, Duration].each {|klass| register_proxy klass}
     end
 
     # Implementation of {Service.configure}

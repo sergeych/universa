@@ -340,8 +340,6 @@ module Universa
     # perform UMI remote call
     def call(command, *args)
       log ">> #{command}(#{args})"
-      # result = @endpoint.sync_call(command, *args, **EMPTY_KWARGS)
-
       mx = Mutex.new
       cv = ConditionVariable.new()
       error, result = nil, nil
