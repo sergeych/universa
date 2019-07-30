@@ -21,13 +21,13 @@ module Universa
 
   end
 
-  include Checks
-
   # Secure loan helper class builds and runs secure loan smart contracts
   class SecureLoanHelper < RemoteAdapter
     remote_class "com.icodici.universa.contract.helpers.SecureLoanHelper"
 
     static_method :initSecureLoan
+
+    include Checks
 
     # initSecureLoan with named arguments and type checks.
     # 
