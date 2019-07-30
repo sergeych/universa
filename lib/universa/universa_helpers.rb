@@ -1,6 +1,8 @@
 module Universa
 
   module Checks
+    protected
+
     def ensure_type obj, type, name
       obj.is_a?(type) or raise ArgumentError, "#{name} must be a #{type}, but is a #{obj.type}"
     end
@@ -27,7 +29,7 @@ module Universa
 
     static_method :initSecureLoan
 
-    include Checks
+    extend Checks
 
     # initSecureLoan with named arguments and type checks.
     # 
