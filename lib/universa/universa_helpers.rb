@@ -28,6 +28,9 @@ module Universa
     remote_class "com.icodici.universa.contract.helpers.SecureLoanHelper"
 
     static_method :initSecureLoan
+    static_method :repaySecureLoan
+    static_method :closeSecureLoan
+    static_method :defaultSecureLoan
 
     extend Checks
 

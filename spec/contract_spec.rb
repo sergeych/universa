@@ -219,7 +219,18 @@ describe Contract do
     c
   end
 
-
+  it "properly serializes data in definition and state" do
+    c = Contract.create @private_key
+    d = Time.now
+    c.definition[:date1] = d
+    c.definition[:str1] = "foo"
+    c.state[:date2] = d
+    c.state[:str2] = "bar"
+    c.seal
+    c1 = Contract.from_packed(c.packed)
+    c1.definition.date1.should be_a(Time)
+    c1.state.date2.should be_a(Time)
+  end
 end
 
 class TestInit
