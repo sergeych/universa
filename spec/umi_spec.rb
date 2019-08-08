@@ -8,6 +8,7 @@ describe UMI do
   it "supports protocol" do
     @umi.send(:call,"version").system.should == 'UMI'
     @umi.core_version.should =~ /^\d+\.\d+\./
+    p @umi.core_version
   end
 
   it "raises correct errors" do

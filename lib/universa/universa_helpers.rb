@@ -66,4 +66,17 @@ module Universa
 
     end
   end
+
+  class EscrowHelper < RemoteAdapter
+    remote_class "com.icodici.universa.contract.helpers.EscrowHelper"
+
+    static_method :initEscrow
+    static_method :assignEscrow
+    static_method :cancelEscrow
+    static_method :completeEscrow
+    static_method :closeEscrow
+    static_method :closeEscrow
+    static_method :obtainPaymentOnClosedEscrow
+    static_method :getPayment
+  end
 end
