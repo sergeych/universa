@@ -71,11 +71,16 @@ class KeyTool
       #   options.node = node
       # end
       #
-      opts.on("--[no-]password", "require password from console on subsequent operations (default: require)") {|x|
+      opts.on("--no-password",
+              "create resources not protected by password. Not recommended.") {|x|
         @require_password = x
       }
 
-      opts.on("-a", "--[no-]autogenerate_password") {|x|
+      opts.on("-a", "--autogenerate_password",
+              "the new secure password will be generated and shown on the console",
+              "while the password is safe, printing it out to the console may not.",
+              "Normally, system promts the password on the console that is",
+              "more secure") {|x|
         @autogenerate_password = x
       }
 
@@ -83,7 +88,7 @@ class KeyTool
         @output_file = f
       }
 
-      opts.on("-F", "force overwrite file") {
+      opts.on("-F", "--force", "force overwrite file") {
         @overwrite = true
       }
 
@@ -110,7 +115,7 @@ class KeyTool
         end
       }
 
-      opts.on("--show FILE", "show key information") {|name|
+      opts.on("-s FILE","--show FILE", "show key information") {|name|
         task {
           packed = open(name, 'rb') {|f| f.read} rescue error("can't read file: #{name}")
           key = begin
