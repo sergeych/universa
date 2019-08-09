@@ -39,6 +39,19 @@ module Universa
   class PublicKey < RemoteAdapter
     remote_class 'com.icodici.crypto.PublicKey'
 
+    # Load key from packed, optinally, using the password
+    #
+    # @param [String] packed binary string with packed key
+    # @param [String] password optional password
+    def self.from_packed(packed, password: nil)
+      packed.force_encoding 'binary'
+      if password
+        invoke_static "unpackWithPassword", packed, password
+      else
+        PublicKey.new packed
+      end
+    end
+
     # @return [KeyAddress] short address
     def short_address
       @short_address ||= get_short_address()

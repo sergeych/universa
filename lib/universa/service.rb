@@ -143,7 +143,7 @@ module Universa
 
     # debugging label
     def inspect
-      "<#{self.class.name}:#{__id__}:#{@remote._remote_class_name}:#{@remote._remote_id}}>"
+      "<#{self.class.name}:#{__id__}:#{@remote._remote_class_name}:#{@remote._remote_id}>"
     end
 
     # call the remote toString(). Does not cache it.

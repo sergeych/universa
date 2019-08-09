@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-
-
+require 'ansi/code'
+require 'io/console'
 begin
   $:.unshift File.expand_path(File.dirname(__FILE__) + "/../lib")
   require 'universa'
@@ -8,4 +8,6 @@ rescue LoadError => e
   require 'universa'
 end
 
-# key = PrivateKey.from_packed
+require 'universa/tools'
+require 'universa/keytool/keytool'
+
