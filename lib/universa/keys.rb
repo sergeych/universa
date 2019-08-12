@@ -32,6 +32,12 @@ module Universa
     def public_key
       @public_key ||= get_public_key
     end
+
+    # sign data or string with a specified hash type
+    # @return binary signature
+    def sign(data, hash_type = "SHA3_384")
+      __getobj__.sign(data.force_encoding('binary'), hash_type)
+    end
   end
 
   # A +com.icodici.crypto.PublicKey+ extension. As the key is immutable,
@@ -61,6 +67,21 @@ module Universa
     def long_address
       @long_address ||= get_long_address()
     end
+
+    # Check signature
+    # @param [String] data as binary or normal string
+    # @param [Object] signature as binary string
+    # @param [Object] hash_type to use
+    # @return true if it is ok
+    def verify(data, signature, hash_type = "SHA3_384")
+      __getobj__.verify(data.force_encoding('binary'), signature, hash_type)
+    end
+
+    # @param [String] data binary or usual data string
+    # @return [String] binary string with encrypted data
+    def encrypt(data)
+      __getobj__.encrypt(data.force_encoding('binary'))
+    end
   end
 
   # A +com.icodici.crypto.SymmetricKey+ extension. As the key is immutable,
@@ -73,7 +94,7 @@ module Universa
     # @param [Object] rounds derivation rounds
     # @param [Object] salt optional salt used to disallow detect password match by key match
     # @return [SymmetricKey] instance
-    def self.from_password(password, rounds, salt=nil)
+    def self.from_password(password, rounds, salt = nil)
       salt.force_encoding(Encoding::BINARY) if salt
       invoke_static 'fromPassword', password, rounds, salt
     end
@@ -93,6 +114,16 @@ module Universa
     # @return [String] key bytes (binary string)
     def key
       @key ||= getKey()
+    end
+
+    # Encrypt data using EtA (HMAC)
+    def eta_encrypt(plaintext)
+      __getobj__.etaEncrypt(plaintext.force_encoding('binary'))
+    end
+
+    # Decrypt data using EtA (HMAC)
+    def eta_decrypt(plaintext)
+      __getobj__.eta_decrypt(plaintext.force_encoding('binary'))
     end
   end
 
