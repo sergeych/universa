@@ -71,8 +71,12 @@ class KeyTool
     end
   end
 
-  def output_file(extension = nil)
-    name = @output_file or error "specify ouput file with -o / --output"
+  def output_file(extension = nil, overwrite_existing_name=nil)
+    name = @output_file
+    if !name
+      (overwrite_existing_name && @overwrite) or error "specify output file with -o / --output"
+      name = overwrite_existing_name
+    end
     extension && !name.end_with?(extension) ? "#{name}#{extension}" : name
   end
 
@@ -166,9 +170,10 @@ class KeyTool
         }
       }
 
-      opts.on("-u FILE", "--update FILE", "update password on the existing key (also add/remove") { |name|
+      opts.on("-u FILE", "--update FILE", "update password on the existing key (also add/remove",
+              "requires -o output_file or --overwrite to change it in place") { |name|
         task {
-          output = output_file(".private.unikey")
+          output = output_file(".private.unikey", name)
           check_overwrite output
           key = load_key(name)
           puts("\rKey loaded OK                       ")
@@ -194,8 +199,36 @@ class KeyTool
 
       opts.separator ""
 
+      def sample(text)
+        "    " + ANSI.bold{ANSI.green{text}}
+      end
+
       opts.on_tail("-h", "--help", "Show this message") do
         puts opts
+        puts <<-End
+
+#{ANSI.bold{"Usage samples:"}}
+
+Generate new key 'foo.private.unikey' - will ask password from console (notice extension will be added automatically)
+  
+#{sample "unikeys -g 2048 -o foo"}
+
+Show foo addresses:
+
+#{sample "unikeys -s foo.private.unikey"}
+
+Change password of the foo key and save it into new file bar.private.unikey (keeping both for security), will ask
+new password from console
+
+#{sample "unikeys -u foo.private.unikey -o bar"}
+
+Change password in place (overwriting old file)
+
+#{sample "unikeys -u foo.private.unikey -f"}
+
+See project home page at #{ANSI.underline{ "https://github.com/sergeych/universa" }}
+
+        End
         exit
       end
 
