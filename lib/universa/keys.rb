@@ -33,6 +33,11 @@ module Universa
       @public_key ||= get_public_key
     end
 
+    # @return key strength in bits, e.g. 2048, 4096...
+    def bit_strength
+      @public_key.bit_strength
+    end
+
     # sign data or string with a specified hash type
     # @return binary signature
     def sign(data, hash_type = "SHA3_384")
@@ -56,6 +61,11 @@ module Universa
       else
         PublicKey.new packed
       end
+    end
+
+    # @return key strength in bits, e.g. 2048, 4096...
+    def bit_strength
+      getBitStrength()
     end
 
     # @return [KeyAddress] short address
