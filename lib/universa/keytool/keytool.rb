@@ -71,7 +71,7 @@ class KeyTool
     end
   end
 
-  def output_file(extension = nil, overwrite_existing_name=nil)
+  def output_file(extension = nil, overwrite_existing_name = nil)
     name = @output_file
     if !name
       (overwrite_existing_name && @overwrite) or error "specify output file with -o / --output"
@@ -200,14 +200,14 @@ class KeyTool
       opts.separator ""
 
       def sample(text)
-        "    " + ANSI.bold{ANSI.green{text}}
+        "    " + ANSI.bold { ANSI.green { text } }
       end
 
       opts.on_tail("-h", "--help", "Show this message") do
         puts opts
         puts <<-End
 
-#{ANSI.bold{"Usage samples:"}}
+#{ANSI.bold { "Usage samples:" }}
 
 Generate new key 'foo.private.unikey' - will ask password from console (notice extension will be added automatically)
   
@@ -226,7 +226,7 @@ Change password in place (overwriting old file)
 
 #{sample "unikeys -u foo.private.unikey -f"}
 
-See project home page at #{ANSI.underline{ "https://github.com/sergeych/universa" }}
+See project home page at #{ANSI.underline { "https://github.com/sergeych/universa" }}
 
         End
         exit
@@ -244,7 +244,11 @@ See project home page at #{ANSI.underline{ "https://github.com/sergeych/universa
     ## D_TIsYOfFQ2WejhG3
     begin
       opt_parser.order!
-      @tasks.each { |t| t.call }
+      if @tasks.empty?
+        puts "nothing to do. Please specify one of: -g, -s or -u. See help for more (-h)."
+      else
+        @tasks.each { |t| t.call }
+      end
     rescue MessageException, OptionParser::ParseError => e
       STDERR.puts ANSI.red { ANSI.bold { "\nError: #{e}\n" } }
       exit(1000)
