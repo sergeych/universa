@@ -1,8 +1,6 @@
 describe SecureLoanHelper do
 
   before :all do
-    # Service.log_umi
-
     @lender_key = PrivateKey.new 2048
     @borrower_key = PrivateKey.new 2048
     @lender_address = @lender_key.short_address

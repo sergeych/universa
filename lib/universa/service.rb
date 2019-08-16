@@ -27,7 +27,7 @@ module Universa
       [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder,
        Role, SimpleRole, RoleLink, ListRole,
        ChangeOwnerPermission, RevokePermission, ModifyDataPermission,  SplitJoinPermission,
-       UmiClient, Duration].each {|klass| register_proxy klass}
+       UmiClient, Duration, Compound].each {|klass| register_proxy klass}
     end
 
     # Implementation of {Service.configure}

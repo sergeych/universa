@@ -79,4 +79,8 @@ module Universa
     static_method :obtainPaymentOnClosedEscrow
     static_method :getPayment
   end
+
+  class ContractService < RemoteAdapter
+    remote_class " com.icodici.universa.contract.ContractsService"
+  end
 end

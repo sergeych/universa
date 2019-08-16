@@ -16,5 +16,5 @@ rm -rd ./bin/__MACOSX >/dev/null 2>&1
 
 rm download
 
-echo "done!"
+echo "successfully nstalled version: `bin/umi/bin/umi --version`"
 

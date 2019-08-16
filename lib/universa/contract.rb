@@ -163,6 +163,10 @@ module Universa
 
   end
 
+  class Compound < RemoteAdapter
+    remote_class "com.icodici.universa.contract.helpers.Compound"
+  end
+
   # Universa contract adapter.
   class Contract < RemoteAdapter
     remote_class "com.icodici.universa.contract.Contract"
@@ -350,8 +354,6 @@ module Universa
       return false if !other || !other.is_a?(Contract)
       hash_id == other.hash_id
     end
-
-
   end
 
 end
