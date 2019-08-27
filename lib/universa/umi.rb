@@ -127,10 +127,6 @@ module Universa
       encode_result result
     end
 
-    def invoke_static(class_name, method, *args)
-      encode_result call("invoke", class_name, method.to_s.camelize_lower, *prepare_args(args))
-    end
-
     def get_field(remote_object, name)
       encode_result call("get_field", remote_object._remote_id, name)
     end

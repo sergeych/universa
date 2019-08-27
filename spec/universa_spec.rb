@@ -62,7 +62,6 @@ RSpec.describe Universa do
     data3 = PBKDF2.derive "foobar", salt: 'barbaz',rounds: 1000, hash: 'com.icodici.crypto.digest.Sha256', length: 40
     data3[0...32].should == data1
     data3[33..40].should_not == data1[0..8]
-    p @umi.core_version
   end
 
 

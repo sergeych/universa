@@ -17,3 +17,4 @@ Gemfile.lock
 /*.private.unikey
 /umi.log
 /umisession.log
+/umisession.log

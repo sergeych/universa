@@ -1,4 +1,5 @@
 require 'bigdecimal'
+require 'universa/lazy'
 
 module Universa
 
@@ -146,15 +147,16 @@ module Universa
     #
     # @return [String] binary string
     def bytes
-      get_digest
+      @bytes ||= get_digest
     end
+
 
     # Get string representation. It is, actually, base64 encoded string representation. Longer, but could easily
     # be transferred with text protocols.
     #
     # @return [String] string representation
     def to_s
-      Base64.encode64(get_digest).gsub(/\s/, '')
+      @str ||= Base64.encode64(get_digest).gsub(/\s/, '')
     end
 
     # Converts to URL-safe varianot of base64, as RFC 3548 suggests:
@@ -164,7 +166,7 @@ module Universa
     # Could be decoded safely back with {HashId.from_string} but not (most likely) with JAVA API itself
     # @return [String] RFC3548 modified base64
     def to_url_safe_string
-      Base64.encode64(get_digest).gsub(/\s/, '').gsub('/', '_').gsub('+', '-')
+      @urlsafe_str ||= Base64.encode64(get_digest).gsub(/\s/, '').gsub('/', '_').gsub('+', '-')
     end
 
     # To use it as a hash key_address.
