@@ -2,6 +2,38 @@ require 'bigdecimal'
 
 module Universa
 
+  # Adapter for com.icodici.crypto
+  class KeyInfo < RemoteAdapter
+    remote_class "com.icodici.crypto.KeyInfo"
+  end
+
+  # Derive symmetric key from a password using PBKDF2 algorithm
+  def derive_key(password, salt, rounds: 50000, prf: "HMAC_SHA256", tag: "default_tag")
+    salt.is_a?(String) and salt = salt.force_encoding('binary')
+    tag && tag.is_a?(String) and tag = tag.force_encoding('binary')
+    ki = KeyInfo.new(prf, rounds, salt, tag)
+    ki.derivePassword(password)
+  end
+
+  # Utiliy to generate keys of arbitrary length derived from passwords using PBKDF2 algorithm. Use
+  # {#derive} to produce keys from passwords in a realtively safe way (safety depends on the password strength)
+  class PBKDF2 < RemoteAdapter
+    remote_class "com.icodici.crypto.PBKDF2"
+
+    # Derive a binary key from the string password using PBKDF2 algorithm.
+    #
+    # @param [String] password to derive key from
+    # @param [String] salt
+    # @param [Integer] rounds using in the PNKDF2 generation
+    # @param [String] hash class name, should include packgae name. See Universa crypto Digest class
+    # @param [Integer] length of the derived key.
+    # @return [Binary] binary string with generated key
+    def self.derive(password, salt: "default_salt", rounds: 50000, hash: 'com.icodici.crypto.digest.Sha256', length: 32)
+      salt = salt.force_encoding('binary') if salt && salt.is_a?(String)
+      invoke_static :derive, hash, password, salt, rounds, length
+    end
+  end
+
   # Adapter for Universa ChangeOwnerPermission
   class ChangeOwnerPermission < RemoteAdapter
     remote_class "com.icodici.universa.contract.permissions.ChangeOwnerPermission"
@@ -316,7 +348,7 @@ module Universa
     # trace found errors (call it afer check()): the Java version will not be able to trace to the
     # process stdout, so we reqrite it here
     def trace_errors
-      getErrors.each {|e|
+      getErrors.each { |e|
         puts "(#{e.object || ''}): #{e.error}"
       }
     end
@@ -325,7 +357,7 @@ module Universa
     #
     # @return [String] possibly empty ''
     def errors_string
-      getErrors.map {|e| "(#{e.object || ''}): #{e.error}"}.join(', ').strip
+      getErrors.map { |e| "(#{e.object || ''}): #{e.error}" }.join(', ').strip
     end
 
     # Test that some set of keys could be used to perform some role.
@@ -333,7 +365,7 @@ module Universa
     # @param [String] name of the role to check
     # @param [PublicKey] keys instances to check against
     def can_perform_role(name, *keys)
-      getRole(name.to_s).isAllowedForKeys(Set.new keys.map {|x|
+      getRole(name.to_s).isAllowedForKeys(Set.new keys.map { |x|
         x.is_a?(PrivateKey) ? x.public_key : x
       })
     end

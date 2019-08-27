@@ -121,15 +121,6 @@ class KeyTool
       opts.banner = ANSI.bold { "\nUniversa Key tool #{Universa::VERSION}" }
       opts.separator ""
 
-      # opts.on("-k", "--key KEY_FILE",
-      #         "load the access key from the specified file. By default, looks in", "#{options.key_path}") do |file_name|
-      #   options.key_path = File.expand_path(file_name)
-      # end
-      #
-      # opts.on("-n", "--node name", "node to connect, without protocol, e.g. 'node-7-com.universa.io'") do |node|
-      #   options.node = node
-      # end
-      #
       opts.on("--no-password",
               "create resources not protected by password. Not recommended.") { |x|
         @require_password = x
@@ -241,7 +232,6 @@ See project home page at #{ANSI.underline { "https://github.com/sergeych/univers
       end
     }
 
-    ## D_TIsYOfFQ2WejhG3
     begin
       opt_parser.order!
       if @tasks.empty?
