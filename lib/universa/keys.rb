@@ -158,9 +158,7 @@ module Universa
     # returns binary representation. It is not a string representation!
     # @return [String] binary string representation
     def packed
-      s = get_packed
-      s.force_encoding 'binary'
-      s
+      @packed ||= get_packed.force_encoding 'binary'
     end
 
     # Compare KeyAddress with another KeyAddress or its string or even binary representation.
@@ -180,6 +178,14 @@ module Universa
       else
         false
       end
+    end
+
+    def hash
+      to_s.hash
+    end
+
+    def eql?(other)
+      self == other
     end
 
   end

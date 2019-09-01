@@ -224,9 +224,9 @@ module Universa
     end
 
     # get errors reported by the network
-    # @return [Array(String)] possibly empty array
+    # @return [Array(Hash)] possibly empty array of error data
     def errors
-      @_errors ||= @source.errors&.map(&:to_s) || []
+      @_errors ||= @source.errors || []
     rescue
       "failed to extract errors: #$!"
     end
