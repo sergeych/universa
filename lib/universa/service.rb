@@ -25,7 +25,7 @@ module Universa
       @@log_umi && @config['log'] = 'umi.log'
       @known_proxies = {}
       [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder,
-       Role, SimpleRole, RoleLink, ListRole,
+       Role, SimpleRole, RoleLink, ListRole, Parcel, UnsContract,
        ChangeOwnerPermission, RevokePermission, ModifyDataPermission,  SplitJoinPermission,
        UmiClient, Duration, Compound, KeyInfo, PBKDF2].each {|klass| register_proxy klass}
     end
@@ -49,7 +49,7 @@ module Universa
       puts "U:Service: #{msg}"
     end
 
-    # Create objectproxy for known types
+    # Create object proxy for known types
     # @param [Ref] ref to transform
     # @return [RemoteAdapter | Ref] transformed or source reference
     def create_proxy ref
@@ -73,9 +73,12 @@ module Universa
       end
     end
 
-    private
-
-    def register_proxy klass
+    # Register a class that will work as a proxy for UMI remote class. Such adapter class mist extend RemoteAdapter
+    # class. Once the class is registered, serive will automatically instantiate it when UMI will pass the instance
+    # of the corresponding remote class.
+    # @param [Class] klass that will be
+    def register_proxy(klass)
+      RemoteAdapter > klass or raise ArgumentError, "#{klass.name} must be based on RemoteAdapter"
       remote_class_name = klass.remote_class_name
       raise Error, "#{remote_class_name} is already registered in Service" if @known_proxies.include?(remote_class_name)
       @known_proxies[remote_class_name] = klass

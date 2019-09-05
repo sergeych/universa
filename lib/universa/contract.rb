@@ -35,6 +35,14 @@ module Universa
     end
   end
 
+  class Parcel < RemoteAdapter
+    remote_class "com.icodici.universa.contract.Parcel"
+  end
+
+  class UnsContract < RemoteAdapter
+    remote_class "com.icodici.universa.contract.services.UnsContract"
+  end
+
   # Adapter for Universa ChangeOwnerPermission
   class ChangeOwnerPermission < RemoteAdapter
     remote_class "com.icodici.universa.contract.permissions.ChangeOwnerPermission"
