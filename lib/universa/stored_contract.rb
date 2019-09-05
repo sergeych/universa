@@ -1,6 +1,6 @@
 module Universa
 
-  # under construction, pls on not use yet
+  # under construction, pls don't use.
   #
   # this is a base class for a contract stored in some contract chain. The implementation
   # must inherit and implement its {#load} and {#save} methods at least. To do it,

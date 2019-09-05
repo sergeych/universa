@@ -2,6 +2,8 @@ require 'yaml'
 
 module Universa
 
+  # Work iun progress, not to use as for now.
+  #
   # The storage interface capable to store contracts in chains, providing search and attributes.
   # This class is not a store itself but the base class for it, having common boilerplate and
   # sort of interface to implement. _Under development, we might change it_
