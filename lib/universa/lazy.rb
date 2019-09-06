@@ -54,7 +54,14 @@ module Universa
     @@lazy_creation_mutex = Mutex.new
 
     def Lazy.included(other)
-      # implement class-level lazy instance var definition
+
+
+      # @!method lazy(name, &block)
+      # Provides create lazy instance variable calculated by a provided block
+      # @param [String] name of the created field
+      # @return [string] Returns the greeting.
+      # @yield calculates the value for the variable
+
       def other.lazy(name, &block)
         define_method(name.to_sym) {
           x = @@lazy_creation_mutex.synchronize {

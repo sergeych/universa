@@ -78,7 +78,7 @@ module Universa
     # of the corresponding remote class.
     # @param [Class] klass that will be
     def register_proxy(klass)
-      RemoteAdapter > klass or raise ArgumentError, "#{klass.name} must be based on RemoteAdapter"
+      klass < RemoteAdapter or raise ArgumentError, "#{klass.name} must be based on RemoteAdapter"
       remote_class_name = klass.remote_class_name
       raise Error, "#{remote_class_name} is already registered in Service" if @known_proxies.include?(remote_class_name)
       @known_proxies[remote_class_name] = klass

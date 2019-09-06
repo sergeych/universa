@@ -33,7 +33,7 @@ module Universa
     # in the network topology might require fresh topology file (or upgrade the gem).
     #
     #
-    # @param [String] topology: could be name of known network (e.g. mainnet as by default) or path to a .json file
+    # @param [String] topology could be name of known network (e.g. mainnet as by default) or path to a .json file
     #                 containing some network topology, for example, obtained from some external source like telegram
     #                 channel.
     # @param [PrivateKey] private_key to connect with.
@@ -262,7 +262,7 @@ module Universa
       is_approved
     end
 
-    # same as {pending}
+    # same as {is_pending}
     def pending?
       is_pending
     end

@@ -1,6 +1,6 @@
 module Universa::FSStore
 
-  # The {StoredContract} implementation to work with {FileStore}.
+  # The {StoredContractBase} implementation to work with {FileStore}. Not finished
   #
   # @!method name
   #   @return [String] the +contract.definition.data.name+ value or nil.

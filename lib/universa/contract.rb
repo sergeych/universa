@@ -17,7 +17,7 @@ module Universa
   end
 
   # Utiliy to generate keys of arbitrary length derived from passwords using PBKDF2 algorithm. Use
-  # {#derive} to produce keys from passwords in a realtively safe way (safety depends on the password strength)
+  # {derive} to produce keys from passwords in a realtively safe way (safety depends on the password strength)
   class PBKDF2 < RemoteAdapter
     remote_class "com.icodici.crypto.PBKDF2"
 
