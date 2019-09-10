@@ -37,6 +37,9 @@ module Universa
 
   class Parcel < RemoteAdapter
     remote_class "com.icodici.universa.contract.Parcel"
+
+    static_method :of
+    static_method :unpack
   end
 
   class UnsContract < RemoteAdapter
