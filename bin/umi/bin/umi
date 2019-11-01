@@ -267,7 +267,7 @@ loadConfigFile() {
 }
 
 # Now check to see if it's a good enough version
-# TODO - Check to see if we have a configured default java version, otherwise use 1.8
+# TODO - Check to see if we have a configured default java version, otherwise use 1.6
 java_version_check() {
   readonly java_version=$("$java_cmd" -version 2>&1 | awk -F '"' '/version/ {print $2}')
   if [[ "$java_version" == "" ]]; then
@@ -281,10 +281,10 @@ java_version_check() {
     if [[ "$major" -eq "1" ]]; then
      local major=$(echo "$java_version" | cut -d'.' -f2)
     fi
-    if [[ "$major" -lt "8" ]]; then
+    if [[ "$major" -lt "6" ]]; then
       echo
       echo The java installation you have is not up to date
-      echo $app_name requires at least version 1.8+, you have
+      echo $app_name requires at least version 1.6+, you have
       echo version $java_version
       echo
       echo Please go to http://www.java.com/getjava/ and download
@@ -344,7 +344,7 @@ declare -r lib_dir="$(realpath "${app_home}/../lib")"
 declare -a app_mainclass=(com.icodici.farcallscala.Main)
 
 declare -r script_conf_file="${app_home}/../conf/application.ini"
-declare -r app_classpath="$lib_dir/com.icodici.umi-0.8.63.jar:$lib_dir/org.scala-lang.scala-library-2.12.7.jar:$lib_dir/com.icodici.universa_core-3.12.6.jar:$lib_dir/org.yaml.snakeyaml-1.18.jar:$lib_dir/com.icodici.nanohttpd-2.1.0.jar:$lib_dir/com.icodici.common_tools-3.12.6.jar:$lib_dir/com.eclipsesource.minimal-json.minimal-json-0.9.4.jar:$lib_dir/net.java.dev.jna.jna-4.5.1.jar:$lib_dir/org.checkerframework.checker-qual-2.3.2.jar:$lib_dir/com.icodici.crypto-3.12.6.jar:$lib_dir/org.bouncycastle.bcprov-jdk15on-1.62.jar:$lib_dir/com.squareup.jnagmp.jnagmp-2.0.0.jar:$lib_dir/com.typesafe.play.play-json_2.12-2.6.10.jar:$lib_dir/com.typesafe.play.play-functional_2.12-2.6.10.jar:$lib_dir/org.scala-lang.scala-reflect-2.12.7.jar:$lib_dir/org.typelevel.macro-compat_2.12-1.1.1.jar:$lib_dir/joda-time.joda-time-2.9.9.jar:$lib_dir/com.fasterxml.jackson.core.jackson-core-2.8.11.jar:$lib_dir/com.fasterxml.jackson.core.jackson-annotations-2.8.11.jar:$lib_dir/com.fasterxml.jackson.datatype.jackson-datatype-jdk8-2.8.11.jar:$lib_dir/com.fasterxml.jackson.core.jackson-databind-2.8.11.1.jar:$lib_dir/com.fasterxml.jackson.datatype.jackson-datatype-jsr310-2.8.11.jar:$lib_dir/org.scala-sbt.ipcsocket.ipcsocket-1.0.0.jar:$lib_dir/net.java.dev.jna.jna-platform-4.5.0.jar:$lib_dir/net.sf.jopt-simple.jopt-simple-4.9.jar"
+declare -r app_classpath="$lib_dir/com.icodici.umi-0.8.66.jar:$lib_dir/org.scala-lang.scala-library-2.12.7.jar:$lib_dir/com.icodici.universa_core-3.13.1.jar:$lib_dir/org.yaml.snakeyaml-1.18.jar:$lib_dir/com.icodici.nanohttpd-2.1.0.jar:$lib_dir/com.icodici.common_tools-3.13.1.jar:$lib_dir/com.eclipsesource.minimal-json.minimal-json-0.9.4.jar:$lib_dir/net.java.dev.jna.jna-4.5.1.jar:$lib_dir/org.checkerframework.checker-qual-2.3.2.jar:$lib_dir/com.icodici.crypto-3.13.1.jar:$lib_dir/org.bouncycastle.bcprov-jdk15on-1.62.jar:$lib_dir/com.squareup.jnagmp.jnagmp-2.0.0.jar:$lib_dir/com.typesafe.play.play-json_2.12-2.6.10.jar:$lib_dir/com.typesafe.play.play-functional_2.12-2.6.10.jar:$lib_dir/org.scala-lang.scala-reflect-2.12.7.jar:$lib_dir/org.typelevel.macro-compat_2.12-1.1.1.jar:$lib_dir/joda-time.joda-time-2.9.9.jar:$lib_dir/com.fasterxml.jackson.core.jackson-core-2.8.11.jar:$lib_dir/com.fasterxml.jackson.core.jackson-annotations-2.8.11.jar:$lib_dir/com.fasterxml.jackson.datatype.jackson-datatype-jdk8-2.8.11.jar:$lib_dir/com.fasterxml.jackson.core.jackson-databind-2.8.11.1.jar:$lib_dir/com.fasterxml.jackson.datatype.jackson-datatype-jsr310-2.8.11.jar:$lib_dir/org.scala-sbt.ipcsocket.ipcsocket-1.0.0.jar:$lib_dir/net.java.dev.jna.jna-platform-4.5.0.jar:$lib_dir/net.sf.jopt-simple.jopt-simple-4.9.jar"
 
 # java_cmd is overrode in process_args when -java-home is used
 declare java_cmd=$(get_java_cmd)

@@ -16,6 +16,14 @@ describe "keys" do
     @pub.verify(test, signature).should be_falsey
   end
 
+  it "RSA signs with sha2" do
+    test = "hello world"
+    signature = @key.sign(test, "SHA256")
+    @pub.verify(test, signature, "SHA256").should be_truthy
+    signature[0] = (~signature[0].ord & 0xFF).chr
+    @pub.verify(test, signature).should be_falsey
+  end
+
   it "has strength" do
     @pub.bit_strength.should == 2048
     @key.bit_strength.should == 2048

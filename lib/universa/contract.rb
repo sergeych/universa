@@ -35,6 +35,13 @@ module Universa
     end
   end
 
+  class Safe58 < RemoteAdapter
+    remote_class "net.sergeych.utils.Safe58"
+
+    static_method :encode
+    static_method :decode
+  end
+
   class Parcel < RemoteAdapter
     remote_class "com.icodici.universa.contract.Parcel"
 

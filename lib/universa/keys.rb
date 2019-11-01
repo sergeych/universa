@@ -79,12 +79,13 @@ module Universa
     end
 
     # Check signature
+    #
     # @param [String] data as binary or normal string
     # @param [Object] signature as binary string
-    # @param [Object] hash_type to use
+    # @param [Object] hash_type to use (SHA256, SHA512, SHA3_384 and so on)
     # @return true if it is ok
     def verify(data, signature, hash_type = "SHA3_384")
-      __getobj__.verify(data.force_encoding('binary'), signature, hash_type)
+      __getobj__.verify(data.force_encoding('binary'), signature.force_encoding('binary'), hash_type)
     end
 
     # @param [String] data binary or usual data string
