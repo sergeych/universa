@@ -66,11 +66,19 @@ module Universa
         instance.configure &block
       end
 
+
       # Get the global UMI interface, creating it if need.
       # @return [UMI] ready interface
       def umi
-        instance.umi
+        @@instance_lock.synchronize {
+          instance.umi
+        }
       end
+
+      private
+
+      @@instance_lock = Monitor.new
+
     end
 
     # Register a class that will work as a proxy for UMI remote class. Such adapter class mist extend RemoteAdapter
