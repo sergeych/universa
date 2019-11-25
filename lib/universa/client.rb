@@ -4,195 +4,191 @@ require 'concurrent'
 
 module Universa
 
-  using Universa
+  # The low-level adapter for the UMI Universa client. We provide convenience wrappers for it
+  # {Client} and {Connection} classes, more rubyish in interface paradigm, so there is no need to use it directly.
+  class UmiClient < RemoteAdapter
+    remote_class "com.icodici.universa.node2.network.Client"
+  end
 
-  # Universa network client reads current network configuration and provides access to each node independently
-  # and also implement newtor-wide procedures.
+
+  # The universa network client. Discover and connects to the universa network, provides consensus operations
+  # and all other whole-network related functions.
   class Client
     using Universa::Parallel
     include Universa
 
-    attr :connection_key
+    # Discovered network size
+    attr :size
 
-    # Create client
-    # @param [PrivateKey] private_key to connect with. Generates new one if omitted.
-    def initialize private_key = nil
-      @connection_key = private_key
-      scan_network()
-    end
+    # Client private key ised in the connection
+    attr :private_key
 
-    # Number of accessible nodes
-    def size
-      @nodes.size
-    end
-
-    # private key used by the connection (might be generated)
-    def private_key
-      @connection_key ||= PrivateKey.new(2048)
-    end
-
-    # @return [Connection] random connection
-    def random_connection
-      @nodes.sample
-    end
-
-    def register_single contract
-      random_connection.register_single contract
-    end
-
-    # Perform fats consensus state check. E.g. it scans up to 2/3 of the network until
-    # the positive or negative consensus will be found. So far you can only rely on
-    # result.approved? as it returns some last node result which, though, match the
-    # consensus. Aggregation of parameters is under way.
+    # Construct an Universa network client. Bu default, connects to the main network. Perform consensus-based
+    # network scanning and saves the current network topology in the cache on the file system, default is under
+    # +~/.universa+ but could be overriden.
     #
-    # @param [Contract | HashId] obj to check
-    # @return [ContractState] of some final node check It does not aggregates (yet)
-    def get_state obj
+    # If the network topology file is presented but the cached topology is newer, the cached will be used.
+    #
+    # The client accepts small network topology changes as long as it still create consensus. Still, too big changes
+    # in the network topology might require fresh topology file (or upgrade the gem).
+    #
+    #
+    # @param [String] topology could be name of known network (e.g. mainnet as by default) or path to a .json file
+    #                 containing some network topology, for example, obtained from some external source like telegram
+    #                 channel.
+    # @param [PrivateKey] private_key to connect with.
+    # @param [String] cache_dir where to store resulting topology. we recommend to leave it as nil.
+    #
+    # @raise if network topology could not be checked/obtained.
+    def initialize topology: "mainnet", private_key: PrivateKey.new(2048), cache_dir: nil
+      @client = UmiClient.new topology, cache_dir, private_key
+      @private_key = PrivateKey
+      @size = @client.size
+      @connections = (0...@size).map {nil}
+    end
+
+    # Get the node connection by its index (0...size).
+    # @return [Connection] object
+    def [] index
+      raise IndexError if index < 0 || index >= @size
+      @connections[index] ||= Connection.new(@client.getClient(index))
+    end
+
+    # Get the random node connection
+    # @return [Connection] node connection
+    def random_connection
+      self[rand(0...size)]
+    end
+
+    # Get several random connections
+    # @param [Numeric] number of connections to get
+    # @return [Array(Connection)] array of connections to random (non repeating) nodes
+    def random_connections number
+      (0...size).to_a.sample(number).map {|n| self[n]}
+    end
+
+    # Perform fast consensus state check with a given trust level, determining whether the item is approved or not.
+    # Blocks for 1 minute or until the network solution will be collected for a given trust level.
+    #
+    # @param [Contract | HashId | String | Binary] obj contract to check
+    # @param [Object] trust level, should be between 0.1 (10% of network) and 0.9 (90% of the network)
+    # @return true if the contract state is approved by the network with a given trust level, false otherwise.
+    def is_approved? obj, trust: 0.3
+      hash_id = case obj
+                  when HashId
+                    obj
+                  when Contract
+                    obj.hash_id
+                  when String
+                    if obj.encoding == Encoding::ASCII_8BIT
+                      HashId.from_digest(obj)
+                    else
+                      HashId.from_string(obj)
+                    end
+                  else
+                    raise ArgumentError "wrong type of object to check approval"
+                end
+      @client.isApprovedByNetwork(hash_id, trust.to_f, 60000)
+    end
+      # Perform fast consensus state check with a given trust level, as the fraction of the whole network size.
+      # It checks the network nodes randomly until get enough positive or negative states. The lover the required
+      # trust level is, the faster the answer will be found.
+      #
+      # @param [Contract | HashId] obj contract to check
+      # @param [Object] trust level, should be between 0.1 (10% of network) and 0.9 (90% of the network)
+      # @return [ContractState] of some final node check It does not calculates average time (yet)
+      def get_state obj, trust: 0.3
+      raise ArgumentError, "trusst must be in 0.1..0.9 range" if trust < 0.1 || trust > 0.9
       result = Concurrent::IVar.new
-      negative_votes = Concurrent::AtomicFixnum.new(@nodes.size * 11 / 100)
-      positive_votes = Concurrent::AtomicFixnum.new(@nodes.size * 30 / 100)
-      retry_with_timeout(20, 3) {
-        random_connections(@nodes.size).par.each {|conn|
+      negative_votes = Concurrent::AtomicFixnum.new((size * 0.1).round + 1)
+      positive_votes = Concurrent::AtomicFixnum.new((size * trust).round)
+
+      # consensus-finding conveyor: we chek connections in batches in parallel until get
+      # some consensus. We do not wait until all of them will answer
+      (0...size).to_a.shuffle.each {|index|
+        Thread.start {
           if result.incomplete?
-            if (state = conn.get_state(obj)).approved?
+            if (state = self[index].get_state(obj)).approved?
               result.try_set(state) if positive_votes.decrement < 0
             else
               result.try_set(state) if negative_votes.decrement < 0
             end
           end
         }
-        result.value
       }
-    end
-
-    # @return [Array(Connection)] array of count randomly selected connections
-    def random_connections count = 1
-      @nodes.sample(count)
-    end
-
-    def [] name
-      @nodes.find {|x| x.url =~ /#{name}/}
-    end
-
-    private
-
-    # Rescan the network collecting the networ map comparing results from random 70% of nodes.
-    def scan_network
-      # Todo: cache known nodes
-      root_nodes = (1..30).map {|n| "http://node-#{n}-com.utoken.io:8080/network"}
-
-      # We scan random 70% for consensus
-      n = root_nodes.size * 0.7
-
-      candidates = {}
-      root_nodes.sample(n).par.each {|path|
-        retry_with_timeout(5, 3) {
-          SmartHash.new(Boss.unpack open(path).read).response.nodes.each {|data|
-            ni = NodeInfo.new(data)
-            (candidates[ni] ||= ni).increment_rate
-          }
-        }
-      }
-      nodes = candidates.values.group_by(&:url)
-                  .transform_values!(&:sort)
-      # We roughly assume the full network size as:
-      network_max_size = nodes.size
-      # Refine result: takes most voted nodes and only these with 80% consensus
-      # and map it to Connection objects
-      min_rate = n * 0.8
-      @nodes = nodes.values.map {|v| v[-1]}.delete_if {|v| v.rate < min_rate}
-                   .map {|ni| Connection.new(self, ni)}
-      raise NetworkError, "network is not ready" if @nodes.size < network_max_size * 0.9
-    end
-  end
-
-  # The node information
-  class NodeInfo
-    attr :number, :packed_key, :url
-
-    # constructs from binary packed data
-    def initialize(data)
-      @data, @number, @url, @packed_key = data, data.number, data.url, data.packed_key
-      @rate = Concurrent::AtomicFixnum.new
-    end
-
-    # currently collected approval rate
-    def rate
-      @rate.value
-    end
-
-    # increase approval rate
-    def increment_rate
-      @rate.increment
-    end
-
-    # check information euqlity
-    def == other
-      # number == other.number && packed_key == other.packed_key && url == other.url
-      url == other&.url && packed_key == other&.packed_key && url == other&.url
-    end
-
-    # allows to use as hash key
-    def hash
-      @url.hash + @packed_key.hash
-    end
-
-    # to use as hash key
-    def eql?(other)
-      self == other
-    end
-
-    # ordered by approval rate
-    def < other
-      rate < other.rate
-    end
-
-    def name
-      @name ||= begin
-        url =~ /^https{0,1}:\/\/([^:]*)/
-        $1
-      end
-    end
-  end
-
-
-  # Access to the single node using universa client protocol.
-  #
-  class Connection
-    include Universa
-
-    # create connection for a given clietn. Don't call it direcly, use
-    # {Client.random_connection} or {Client.random_connections} instead. The client implements
-    # lazy initialization so time-consuming actual connection will be postponed until
-    # needed.
-    #
-    # @param [Client] client instance to be bound to
-    # @param [NodeInfo] node_info to connect to
-    def initialize(client, node_info)
-      @client, @node_info = client, node_info
-    end
-
-    # executes ping. Just to ensure connection is alive. Node answers 'sping' => 'spong' hash.
-    # 's' states that secure layer of client protocol is used, e.g. with mutual identification and
-    # ciphering.
-    def ping
-      execute(:sping)
+      result.value
     end
 
     # Register a single contract (on private network or if you have white key allowing free operations)
-    # on a single node.
+    # on a random node. Client must check returned contract state. It requires "open" network or special
+    # key that has a right to register contracts without payment.
+    #
+    # When retrying, randpm nodes are selected.
     #
     # @param [Contract] contract must be sealed ({Contract#seal})
+    #
     # @return [ContractState] of the result. Could contain errors.
-    def register_single(contract)
-      retry_with_timeout(15, 3) {
-        result = ContractState.new(execute "approve", packedItem: contract.packed)
-        while result.is_pending
-          sleep(0.1)
-          result = get_state contract
-        end
-        result
+    def register_single(contract, timeout: 45, max_retries: 3)
+      retry_with_timeout(timeout, max_retries) {
+        ContractState.new(random_connection.register_single(contract, timeout / max_retries * 1000 - 100))
       }
+    end
+
+  end
+
+  # The connection to a single Universa node.
+  class Connection
+
+    # Do not create it direcly, use {Client#random_connection}, {Client#random_connections} or {Client#[]} instead
+    def initialize umi_client
+      @client = umi_client
+    end
+
+    def umi_client
+      @client
+    end
+
+    def node_number
+      @node_number ||= @client.getNodeNumber()
+    end
+
+    # ping another node from this one
+    #
+    # @param [Numeric] node_number to ping
+    # @param [Numeric] timeout
+    #
+    # @return [Hash] hashie with TCP and UDP fields holding ping time in millis, -1 if not available
+    def ping_node(node_number, timeout: 5000)
+      Hashie::Mash.new(@client.pingNode(node_number, timeout).to_h)
+    end
+
+    # Check the connected node is alive. It is adivesd to call {restart} on nodes that return false on pings
+    # to reestablish connection.
+    #
+    # @return true if it is ok
+    def ping
+      @client.ping
+    end
+
+    # Attempt to reestablish connection to the node
+    def restart
+      @client.restart
+    end
+
+    # node url (IP-based)
+    def url
+      @url ||= @client.get_url
+    end
+
+    # Register a single contract (on private network or if you have white key allowing free operations)
+    # with the current  node. Client must check returned contract state. It requires "open" network or special
+    # key that has a right to register contracts without payment.
+    #
+    # @param [Contract] contract must be sealed ({Contract#seal})
+    #
+    # @return [ContractState] of the result. Could contain errors.
+    def register_single(contract, timeout = 25)
+      ContractState.new(@client.register(contract.packed, timeout * 1000))
     end
 
     # Get contract or hashId state from this single node
@@ -207,79 +203,51 @@ module Universa
              else
                raise ArgumentError, "bad argument, want Contract or HashId"
            end
-      ContractState.new(execute "getState", itemId: id)
-    end
-
-
-    # Execute Universa Node client protocol command with optional keyword arguments that will be passed
-    # to the node.
-    #
-    # @param [String|Symbol] name of the command
-    # @param kwargs arguments to call
-    # @return [SmartHash] with the command result
-    def execute(name, **kwargs)
-      connection.command name.to_s, *kwargs.to_a.flatten
-    end
-
-    # def stats days=0
-    #   connection.getStats(days.to_i)
-    # end
-
-    def url
-      @node_info.url
-    end
-
-    def name
-      @node_info.name
-    end
-
-    def number
-      @node_info.number
-    end
-
-    def to_s
-      "Conn<#{@node_info.url}>"
+      ContractState.new(@client.getState(id))
     end
 
     def inspect
-      to_s
+      "<Universa::Connection:#{url}"
     end
 
-    protected
-
-    def connection
-      @connection ||= retry_with_timeout(15, 3) {
-        conn = Service.umi.instantiate("com.icodici.universa.node2.network.Client",
-                                       @node_info.url,
-                                       @client.private_key,
-                                       nil,
-                                       false)
-                   .getClient(@node_info.number - 1)
-        conn
-      }
+    def to_s
+      inspect
     end
 
   end
 
+  # The state of some contract reported by thee network. It is a convenience wrapper around Universa
+  # ItemState structure.
   class ContractState
     def initialize(universa_contract_state)
       @source = universa_contract_state
     end
 
+    # get errors reported by the network
+    # @return [Array(Hash)] possibly empty array of error data
     def errors
-      @source.errors&.map &:to_s
+      @_errors ||= @source.errors || []
     rescue
       "failed to extract errors: #$!"
     end
 
-    def state
-      @source.itemResult.state
+    # @return true if the state contain errors
+    def errors?
+      !errors.empty?
     end
 
+    # @return ItemState structure reported by the UMI
+    def state
+      @source.state
+    end
+
+    # Check that state us +PENDING+. Pending state is neither approved nor rejected.
+    # @return true if this state is one of the +PENDING+ states
     def is_pending
       state.start_with?('PENDING')
     end
 
+    # @return true if the contract state was approved
     def is_approved
       case state
         when 'APPROVED', 'LOCKED'
@@ -289,16 +257,18 @@ module Universa
       end
     end
 
+    # same as {is_approved}
     def approved?
       is_approved
     end
 
+    # same as {is_pending}
     def pending?
       is_pending
     end
 
     def to_s
-      "ContractState:#{state}"
+      "<ContractState:#{state}>"
     end
 
     def inspect

@@ -120,7 +120,24 @@ module Universa
         result
       end
     end
+  end
 
+  alnums = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  ALNUMS = (alnums + alnums.downcase + '_' + '0123456789').chars.to_ary
+  NUMBERS = "0123456789".chars.to_ary
+
+  refine Numeric do
+    def random_alnums
+      to_i.times.map {ALNUMS.sample}.join('')
+    end
+
+    def random_digits
+      to_i.times.map {NUMBERS.sample}.join('')
+    end
+
+    def random_bytes
+      to_i.times.map {rand(256).chr}.join('').force_encoding('binary')
+    end
   end
 
 end

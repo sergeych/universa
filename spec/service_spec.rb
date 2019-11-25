@@ -1,3 +1,5 @@
+using Universa::Parallel
+
 describe Service do
 
   # it "should have single instance" do
@@ -59,6 +61,67 @@ describe Service do
         b.to_h.should == { 'hello' => 1}
       end
 
+      it "allow nesting objects" do
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", b1)
+        b2[:bar].should be_instance_of(Binder)
+        b2[:bar].should == b1
+        b3 = Binder.of "l3", b2
+        b3[:l3].should be_instance_of(Binder)
+        b3[:l3].should == b2
+        b3[:l3][:bar].should be_instance_of(Binder)
+        b3[:l3][:bar].should == b1
+      end
+
+      it "nested binder in array" do
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", [1, b1])
+        b2[:bar][1].should be_instance_of(Binder)
+        b2[:bar][1].should == b1
+        b3 = Binder.of("baz": [1, [2, [3, b1]]])
+        b3[:baz][1][1][1].should be_instance_of(Binder)
+        b3[:baz][1][1][1].should == b1
+      end
+
+      it "allow fined in hash" do
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", { first: b1})
+        b2[:bar]['first'].should be_instance_of(Binder)
+        b2[:bar]['first'].should == b1
+      end
+
+      it "let binder include binder" do
+        b1 = Binder.of( "foo", "bar")
+        b2 = Binder.of( "bar", Binder.of("buzz": b1))
+        b2[:bar]['buzz'].should be_instance_of(Binder)
+        b2[:bar]['buzz'].should == b1
+      end
+
+      it "support nested binders in arguments" do
+        b1 = Binder.of( "foo" => "bar", "bar" => Binder.of("foo" => "bar"))
+        b1[:bar][:foo].should == 'bar'
+      end
+
+      it "initializes binder with hash" do
+        a = Binder.of(foo: 'bar', bar: { buzz: 'ok'})
+        a.foo.should == 'bar'
+        a.bar[:buzz].should == 'ok'
+      end
+
+      it "let access Role data members" do
+        r = Reference.new
+        r.name.should == ""
+        r.name = "foobar"
+        r.name.should == "foobar"
+        Reference::ALL_OF.should == 'all_of'
+        Reference::ANY_OF.should == 'any_of'
+        Reference::SIMPLE_CONDITION.should == 'simple_condition'
+        r.type.should == Reference::TYPE_EXISTING_DEFINITION
+        r.transactional_id.should be_empty
+        r.origin.should be_nil
+        r.matching_items.should == []
+      end
+
     end
 
     it "create and restore proxy objects" do
@@ -92,21 +155,28 @@ describe Service do
       # key1.short_address.should
     end
 
+    it "has symmetric keys" do
+      sk = SymmetricKey.new
+      sk.size_in_bits.should == 256
+      sk.size.should == 32
+      sk.key.size.should == 32
+
+      sk1 = SymmetricKey.new(sk.key)
+      sk1.should == sk
+
+      pk1 = SymmetricKey.from_password 'hello', 1000
+      pk2 = SymmetricKey.from_password 'hello', 1000
+      pk3 = SymmetricKey.from_password 'hello', 1001
+      pk4 = SymmetricKey.from_password 'hello', 1000, "salted!"
+      pk5 = SymmetricKey.from_password 'hello', 1000, "salted!"
+
+      pk3.should_not == pk1
+      pk2.should == pk1
+      pk4.should_not == pk1
+      pk5.should == pk4
+    end
+
   end
-
-
-  # context "default wallet" do
-  #
-  #   before :all do
-  #
-  #     skip "create default wallet"
-  #   end
-  #
-  #   it "has UTN balance"
-  #   it "has U balance"
-  #   it "has testU balance"
-  #
-  # end
 
 
 end

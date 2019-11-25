@@ -45,4 +45,18 @@ describe KeyAddress do
     x["1"].should == 3
   end
 
+  it "properly compares and uses as a key" do
+    a1 = @key.short_address
+    a2 = KeyAddress.new(a1.packed)
+    a1.should == a2
+    a1.eql?(a2).should be_truthy
+    a2.eql?(a1).should be_truthy
+    map = {}
+    map[a1] = 'a1'
+    map[a1].should == 'a1'
+    map[a2].should == 'a1'
+    map.should include(a1)
+    map.should include(a2)
+  end
+
 end

@@ -20,8 +20,8 @@ module Universa
     end
 
     # Create hew Binder from any hash. Keys will be converted to strings.
-    def self.of hash
-      invoke_static "of", hash.transform_keys(&:to_s)
+    def self.of *args
+      invoke_static "of", *args
     end
 
     # Retrieve binder keys
@@ -57,6 +57,7 @@ module Universa
     end
 
     # Converts binder to the array of [key, value] pairs, like with regular ruby hashes
+    # @return [Array(Array(String,Object))] array of [key,value] pairs.
     def to_a
       map {|x| x}
     end
@@ -71,11 +72,6 @@ module Universa
     # @yield [key,value] pairs.
     def map(&block)
       keys.map {|k| block.call [k, __getobj__.get(k)]}
-    end
-
-    # @return [Array(Array(String,Object))] array of [key,value] pairs.
-    def to_a
-      map {|x| x}
     end
 
     # converts to a regular ruby hash

@@ -14,3 +14,7 @@ Gemfile.lock
 /sessionlog.txt
 /**/sessionlog.txt
 .DS_Store
+/*.private.unikey
+/umi.log
+/umisession.log
+/umisession.log

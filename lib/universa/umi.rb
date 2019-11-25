@@ -49,6 +49,14 @@ module Universa
   #
   class UMI
 
+    @@session_log_path = nil
+
+    # Set the detault UMI session log path (including file) that will be used if no log parameter will be passed
+    # to the UMI constructor
+    def self.session_log_path= path
+      @@session_log_path = path
+    end
+
     ##
     # Create UMI instance. It starts the private child process wit UMI server and securely connects to
     # it so no other connection could occur.
@@ -65,7 +73,8 @@ module Universa
     # @param [String] system expected on the remote side. 'UMI' us a universa umi server.
     # @param [Boolean] convert_case it true, convert ruby style snake case `get_some_stuff()` to java style lower camel
     #                  case `getSomeStuff()` while calling methods. Does not affect class names on {instantiate}.
-    def initialize(path = nil, version_check: /./, system: "UMI", log: 'sessionlog.txt', convert_case: true, factory: nil)
+    def initialize(path = nil, version_check: /./, system: "UMI", log: nil, convert_case: true, factory: nil)
+      log ||= @@session_log_path
       path ||= File.expand_path(File.split(__FILE__)[0] + "/../../bin/umi/bin/umi")
       @in, @out, @err, @wtr = Open3.popen3("#{path} #{log ? "-log #{log}" : ''}")
       @endpoint = Farcall::Endpoint.new(
@@ -90,6 +99,13 @@ module Universa
       @version.version
     end
 
+    # @return Universa network library core version
+    def core_version
+      @core_version ||= begin
+        invoke_static "Core", "getVersion"
+      end
+    end
+
     # Create instance of some Universa Java API class, for example 'Contract', passing any arguments
     # to its constructor. The returned reference could be used much like local instance, nu the actual
     # work will happen in the child process. Use references as much as possible as they take all the
@@ -109,6 +125,15 @@ module Universa
       # p ["invoke", ref._remote_id, method, *prepare_args(args)]
       result = call("invoke", ref._remote_id, method, *prepare_args(args))
       encode_result result
+    end
+
+    def get_field(remote_object, name)
+      encode_result call("get_field", remote_object._remote_id, name)
+    end
+
+    def set_field(remote_object, name, value)
+      call("set_field", remote_object._remote_id, name, prepare(value))
+      value
     end
 
     def invoke_static(class_name, method, *args)
@@ -234,19 +259,21 @@ module Universa
 
     # convert ruby arguments array to corresponding UMI values
     def prepare_args args
-      raise "pp bug" if args == [:pretty_print] # this often happens whilte tracing
-      args.map {|x| prepare x }
+      raise "pp bug" if args == [:pretty_print] # this often happens while tracing
+      args.map {|x| prepare x}
     end
 
     # convert single argument to UMI value to pass
     def prepare(x)
+      # p [:pre, x]
       if x.respond_to?(:_as_umi_arg)
+        # p ["uniarg"]
         x._as_umi_arg(self)
       else
         case x
           when Array
             # deep convert all array items
-            x.map{|a| prepare a }
+            x.map {|a| prepare a}
           when Set
             # Make a Java Set
             r = call("instantiate", "Set", x.to_a.map {|i| i._as_umi_arg(self)})
@@ -259,10 +286,17 @@ module Universa
           when String
             x.encoding == Encoding::BINARY ? {__type: 'binary', base64: Base64.encode64(x)} : x
           when Ref
+            # p [:ref]
             x._as_umi_arg(self)
           when RemoteAdapter
+            # p [:ra, x.__getobj__._as_umi_arg(self)]
             # this need special treatment with direct call:
             x.__getobj__._as_umi_arg(self)
+          when Hash
+            # p [:hash]
+            result = {}
+            x.each {|k, v| result[k] = prepare(v)}
+            result
           else
             x
         end
@@ -272,7 +306,7 @@ module Universa
     # Convert remote call result from UMI structures to ruby types
     def encode_result value
       case value
-        when Hashie::Mash
+        when Hash
           type = value.__type
           case type
             when 'RemoteObject';
@@ -282,7 +316,8 @@ module Universa
             when 'unixtime';
               Time.at(value.seconds)
             else
-              value
+              # Deep hash conversion
+              value.transform_values! {|v| encode_result(v)}
           end
         when Hashie::Array
           value.map {|x| encode_result x}
@@ -301,15 +336,23 @@ module Universa
     # perform UMI remote call
     def call(command, *args)
       log ">> #{command}(#{args})"
-      result = @endpoint.sync_call(command, *args, **EMPTY_KWARGS)
-      log "<< #{result}"
-      result
-    rescue Farcall::RemoteError => e
-      case e.remote_class
-        when 'NoSuchMethodException'
-          raise NoMethodError, e.message
-        else
-          raise
+      mx = Mutex.new
+      cv = ConditionVariable.new()
+      error, result = nil, nil
+      mx.synchronize {
+        @endpoint.call(command, *args, **EMPTY_KWARGS) { |_error, _result|
+          error, result = _error, _result
+          mx.synchronize{ cv.signal }
+        }
+        cv.wait(mx)
+      }
+      if error
+        log "<<**ERROR #{error}"
+        raise NoMethodError, error.message  if (cls = error[:class]) == 'NoSuchMethodException'
+        raise Farcall::RemoteError.new(cls, error.text)
+      else
+        log "<< #{result}"
+        result
       end
     end
 

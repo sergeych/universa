@@ -1,7 +1,7 @@
 require 'forwardable'
 require_relative './entry'
 
-# Filesystem-based storage. See {FileStore}.
+# Filesystem-based storage. See {FileStore}. Under reconsidering, please do not use it yet.
 module Universa::FSStore
 
   # Simple file-based store that could be efficiently user with per-file cloud storages like Dropbox,

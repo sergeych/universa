@@ -2,7 +2,7 @@
 
 rm download > /dev/null
 
-wget https://files.universablockchain.com /s/ecz6fDT7ny634Xj/download
+wget https://lnd.im/umi -O download
 
 rm -rd -f ./bin/umi >/dev/null 2>&1
 rm -rd -f ./bin/umi-* >/dev/null 2>&1
@@ -16,5 +16,5 @@ rm -rd ./bin/__MACOSX >/dev/null 2>&1
 
 rm download
 
-echo "done!"
+echo "successfully nstalled version: `bin/umi/bin/umi --version`"
 

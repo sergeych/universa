@@ -1,6 +1,7 @@
 RSpec.describe Universa do
 
   before :all do
+    Service.log_umi
     @umi = UMI.new
   rescue
     puts $!.backtrace.join("\n")
@@ -13,6 +14,8 @@ RSpec.describe Universa do
 
   it "has a version number" do
     expect(Universa::VERSION).not_to be nil
+    (@umi.version =~ /^(\d+)\.(\d+\.\d+)$/).should be_truthy
+    $2.to_f.should >= 8.24
   end
 
   it "provides references to universa library objects" do
@@ -47,6 +50,18 @@ RSpec.describe Universa do
     key1.should_not === key2
     key1.should === key1
     # }
+  end
+
+  it "has access to pbkdf2" do
+    x = derive_key("foobar", "barbaz", rounds: 1000, prf: "HMAC_SHA256")
+    data1 = x.getKey()
+    data1.size.should == 32
+    data2 = PBKDF2.derive "foobar", salt: 'barbaz',rounds: 1000, hash: 'com.icodici.crypto.digest.Sha256'
+    data2.size.should == 32
+    data2.should == data1
+    data3 = PBKDF2.derive "foobar", salt: 'barbaz',rounds: 1000, hash: 'com.icodici.crypto.digest.Sha256', length: 40
+    data3[0...32].should == data1
+    data3[33..40].should_not == data1[0..8]
   end
 
 

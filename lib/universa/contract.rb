@@ -1,6 +1,57 @@
 require 'bigdecimal'
+require 'universa/lazy'
 
 module Universa
+
+  # Adapter for com.icodici.crypto
+  class KeyInfo < RemoteAdapter
+    remote_class "com.icodici.crypto.KeyInfo"
+  end
+
+  # Derive symmetric key from a password using PBKDF2 algorithm
+  def derive_key(password, salt, rounds: 50000, prf: "HMAC_SHA256", tag: "default_tag")
+    salt.is_a?(String) and salt = salt.force_encoding('binary')
+    tag && tag.is_a?(String) and tag = tag.force_encoding('binary')
+    ki = KeyInfo.new(prf, rounds, salt, tag)
+    ki.derivePassword(password)
+  end
+
+  # Utiliy to generate keys of arbitrary length derived from passwords using PBKDF2 algorithm. Use
+  # {derive} to produce keys from passwords in a realtively safe way (safety depends on the password strength)
+  class PBKDF2 < RemoteAdapter
+    remote_class "com.icodici.crypto.PBKDF2"
+
+    # Derive a binary key from the string password using PBKDF2 algorithm.
+    #
+    # @param [String] password to derive key from
+    # @param [String] salt
+    # @param [Integer] rounds using in the PNKDF2 generation
+    # @param [String] hash class name, should include packgae name. See Universa crypto Digest class
+    # @param [Integer] length of the derived key.
+    # @return [Binary] binary string with generated key
+    def self.derive(password, salt: "default_salt", rounds: 50000, hash: 'com.icodici.crypto.digest.Sha256', length: 32)
+      salt = salt.force_encoding('binary') if salt && salt.is_a?(String)
+      invoke_static :derive, hash, password, salt, rounds, length
+    end
+  end
+
+  class Safe58 < RemoteAdapter
+    remote_class "net.sergeych.utils.Safe58"
+
+    static_method :encode
+    static_method :decode
+  end
+
+  class Parcel < RemoteAdapter
+    remote_class "com.icodici.universa.contract.Parcel"
+
+    static_method :of
+    static_method :unpack
+  end
+
+  class UnsContract < RemoteAdapter
+    remote_class "com.icodici.universa.contract.services.UnsContract"
+  end
 
   # Adapter for Universa ChangeOwnerPermission
   class ChangeOwnerPermission < RemoteAdapter
@@ -12,6 +63,7 @@ module Universa
     remote_class "com.icodici.universa.contract.permissions.RevokePermission"
   end
 
+  # Adapter for plitjoin permission
   class SplitJoinPermission < RemoteAdapter
     remote_class "com.icodici.universa.contract.permissions.SplitJoinPermission"
   end
@@ -19,8 +71,52 @@ module Universa
   # Adapter for Universa Role
   class Role < RemoteAdapter
     remote_class "com.icodici.universa.contract.roles.Role"
+
+    class RequireMode
+      ALL_OF = "ALL_OF"
+      ANY_OF = "ANY_OF"
+    end
   end
 
+  # Adaoter for link role
+  class RoleLink < RemoteAdapter
+    remote_class "com.icodici.universa.contract.roles.RoleLink"
+  end
+
+  # adapter for a simple (key owner) role
+  class SimpleRole < RemoteAdapter
+    remote_class "com.icodici.universa.contract.roles.SimpleRole"
+  end
+
+  # adapter for a role that is a list of roles
+  class ListRole < RemoteAdapter
+    remote_class "com.icodici.universa.contract.roles.ListRole"
+  end
+
+  # Adapter for permission to modify data
+  class ModifyDataPermission < RemoteAdapter
+    remote_class "com.icodici.universa.contract.permissions.ModifyDataPermission"
+  end
+
+
+  # Wrapper for Java API Reference class
+
+  class Reference < RemoteAdapter
+    remote_class "com.icodici.universa.contract.Reference"
+
+    remote_field :name, :type, :transactional_id, :contract_id, :required, :origin, :signed_by, :fields, :roles,
+                 :matchingItems
+
+    alias matching_items matchingItems
+
+    ALL_OF = 'all_of'
+    ANY_OF = 'any_of'
+    SIMPLE_CONDITION = 'simple_condition'
+
+    TYPE_TRANSACTIONAL = 1
+    TYPE_EXISTING_DEFINITION = 2
+    TYPE_EXISTING_STATE = 3
+  end
 
   # adapter for Universa TransactionPack
   class TransactionPack < RemoteAdapter
@@ -53,24 +149,32 @@ module Universa
     #
     # @param [String] string_id id string representation, like from +hash_id_instance.to_s+. See {#to_s}.
     def self.from_string(string_id)
-      string_id.force_encoding('utf-8').gsub('-','+').gsub('_','/')
+      string_id.force_encoding('utf-8').gsub('-', '+').gsub('_', '/')
       invoke_static 'with_digest', string_id
     end
+
+    # Create a random HashId
+    # @return [HashId] random HashId
+    def self.create_random
+      invoke_static 'create_random'
+    end
+
 
     # Get binary representation. It is shorter than string representation but contain non-printable characters and
     # can cause problems if treated like a string. Use {#to_s} to get string representation instead.
     #
     # @return [String] binary string
     def bytes
-      get_digest
+      @bytes ||= get_digest
     end
+
 
     # Get string representation. It is, actually, base64 encoded string representation. Longer, but could easily
     # be transferred with text protocols.
     #
     # @return [String] string representation
     def to_s
-      Base64.encode64(get_digest).gsub(/\s/, '')
+      @str ||= Base64.encode64(get_digest).gsub(/\s/, '')
     end
 
     # Converts to URL-safe varianot of base64, as RFC 3548 suggests:
@@ -80,7 +184,7 @@ module Universa
     # Could be decoded safely back with {HashId.from_string} but not (most likely) with JAVA API itself
     # @return [String] RFC3548 modified base64
     def to_url_safe_string
-      Base64.encode64(get_digest).gsub(/\s/, '').gsub('/','_').gsub('+', '-')
+      @urlsafe_str ||= Base64.encode64(get_digest).gsub(/\s/, '').gsub('/', '_').gsub('+', '-')
     end
 
     # To use it as a hash key_address.
@@ -94,6 +198,25 @@ module Universa
       self == other
     end
 
+    # Compare hashid with string representation, binary representation or another HashId instance
+    # automatically.
+    def == other
+      return false if other == nil
+      if other.is_a?(Universa::HashId)
+        super
+      else
+        if other.size == 96
+          bytes == other
+        else
+          to_s == other
+        end
+      end
+    end
+
+  end
+
+  class Compound < RemoteAdapter
+    remote_class "com.icodici.universa.contract.helpers.Compound"
   end
 
   # Universa contract adapter.
@@ -223,7 +346,7 @@ module Universa
     # Helper for many token-like contracts containing state.data.amount
     # @return [BigDecimal] amount or nil
     def amount
-      v = state[:amount] and BigDecimal.new(v.to_s)
+      v = state[:amount] and BigDecimal(v.to_s)
     end
 
     # Write helper for many token-like contracts containing state.data.amount. Saves value
@@ -245,7 +368,7 @@ module Universa
     # trace found errors (call it afer check()): the Java version will not be able to trace to the
     # process stdout, so we reqrite it here
     def trace_errors
-      getErrors.each {|e|
+      getErrors.each { |e|
         puts "(#{e.object || ''}): #{e.error}"
       }
     end
@@ -254,7 +377,7 @@ module Universa
     #
     # @return [String] possibly empty ''
     def errors_string
-      getErrors.map {|e| "(#{e.object || ''}): #{e.error}"}.join(', ').strip
+      getErrors.map { |e| "(#{e.object || ''}): #{e.error}" }.join(', ').strip
     end
 
     # Test that some set of keys could be used to perform some role.
@@ -262,7 +385,7 @@ module Universa
     # @param [String] name of the role to check
     # @param [PublicKey] keys instances to check against
     def can_perform_role(name, *keys)
-      getRole(name.to_s).isAllowedForKeys(Set.new keys.map {|x|
+      getRole(name.to_s).isAllowedForKeys(Set.new keys.map { |x|
         x.is_a?(PrivateKey) ? x.public_key : x
       })
     end
@@ -278,6 +401,11 @@ module Universa
       revoke
     end
 
+    # Ruby-style contracts equality.
+    def == other
+      return false if !other || !other.is_a?(Contract)
+      hash_id == other.hash_id
+    end
   end
 
 end

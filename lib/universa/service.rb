@@ -8,14 +8,26 @@ module Universa
   # As UMI server is multithreaded by nature, is will not block ruby threads waiting for remote
   # invocation.
   class Service
+
+    @@log_umi = false
+
+    # set log mode for UMI commands. Works only when called before any Service usage, e.g. before the
+    # UMI client has been constructed.
+    def self.log_umi
+      @@log_umi = true
+    end
+
     include Singleton
 
     # Setup service initial parameters
     def initialize
       @config = SmartHash.new path: nil
+      @@log_umi && @config['log'] = 'umi.log'
       @known_proxies = {}
-      [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder, Role, ChangeOwnerPermission, RevokePermission,
-       SplitJoinPermission].each {|klass| register_proxy klass}
+      [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder,
+       Role, SimpleRole, RoleLink, ListRole, Parcel, UnsContract,
+       ChangeOwnerPermission, RevokePermission, ModifyDataPermission,  SplitJoinPermission,
+       UmiClient, Duration, Compound, KeyInfo, PBKDF2].each {|klass| register_proxy klass}
     end
 
     # Implementation of {Service.configure}
@@ -37,7 +49,7 @@ module Universa
       puts "U:Service: #{msg}"
     end
 
-    # Create objectproxy for known types
+    # Create object proxy for known types
     # @param [Ref] ref to transform
     # @return [RemoteAdapter | Ref] transformed or source reference
     def create_proxy ref
@@ -54,16 +66,27 @@ module Universa
         instance.configure &block
       end
 
+
       # Get the global UMI interface, creating it if need.
       # @return [UMI] ready interface
       def umi
-        instance.umi
+        @@instance_lock.synchronize {
+          instance.umi
+        }
       end
+
+      private
+
+      @@instance_lock = Monitor.new
+
     end
 
-    private
-
-    def register_proxy klass
+    # Register a class that will work as a proxy for UMI remote class. Such adapter class mist extend RemoteAdapter
+    # class. Once the class is registered, serive will automatically instantiate it when UMI will pass the instance
+    # of the corresponding remote class.
+    # @param [Class] klass that will be
+    def register_proxy(klass)
+      klass < RemoteAdapter or raise ArgumentError, "#{klass.name} must be based on RemoteAdapter"
       remote_class_name = klass.remote_class_name
       raise Error, "#{remote_class_name} is already registered in Service" if @known_proxies.include?(remote_class_name)
       @known_proxies[remote_class_name] = klass
@@ -82,8 +105,8 @@ module Universa
   # the remote to create remote instance.
   class RemoteAdapter < Delegator
 
-    # Instantiate new proxy object passing arguments to the remote constructor. The UMO host will try
-    # ot find overloaded constructor that matches the arguments.
+    # Instantiate new proxy object passing arguments to the remote constructor. The UMI host will try
+    # to find overloaded constructor that matches the arguments.
     #
     # @param [*Any] args any arguments that remote constructor may accept.
     def initialize(*args)
@@ -131,7 +154,7 @@ module Universa
 
     # debugging label
     def inspect
-      "<#{self.class.name}:#{__id__}:#{@remote._remote_class_name}:#{@remote._remote_id}}>"
+      "<#{self.class.name}:#{__id__}:#{@remote._remote_class_name}:#{@remote._remote_id}>"
     end
 
     # call the remote toString(). Does not cache it.
@@ -142,6 +165,27 @@ module Universa
 
     def self.invoke_static(method_name, *args)
       Service.umi.invoke_static @remote_class_name, method_name, *args
+    end
+
+    def self.remote_field *names
+      names.each {|name|
+        class_eval <<-End
+          def #{name}
+            Service.umi.get_field(self,"#{name}")
+          end
+          def #{name}=(value)
+            Service.umi.set_field(self,"#{name}", value)
+          end
+          End
+      }
+    end
+
+    def self.static_method name
+      class_eval <<-End
+        def self.#{name} *args
+          invoke_static "#{name.to_s}", *args
+        end
+      End
     end
   end
 

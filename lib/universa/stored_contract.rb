@@ -1,5 +1,7 @@
 module Universa
 
+  # under construction, pls don't use.
+  #
   # this is a base class for a contract stored in some contract chain. The implementation
   # must inherit and implement its {#load} and {#save} methods at least. To do it,
   # inherit and implement {ChainStore} to work with it.
@@ -9,7 +11,7 @@ module Universa
   # - contract could be assigned only once, no matter how, so its fields could be cached.
   # - origin, hash_id and parent are cached. So other contract parameters should be.
   #
-  class StoredContract
+  class StoredContractBase
 
     # {ChainStore} instance to which it is connected
     attr :chain_store

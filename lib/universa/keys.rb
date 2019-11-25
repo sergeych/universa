@@ -32,12 +32,41 @@ module Universa
     def public_key
       @public_key ||= get_public_key
     end
+
+    # @return key strength in bits, e.g. 2048, 4096...
+    def bit_strength
+      @public_key.bit_strength
+    end
+
+    # sign data or string with a specified hash type
+    # @return binary signature
+    def sign(data, hash_type = "SHA3_384")
+      __getobj__.sign(data.force_encoding('binary'), hash_type)
+    end
   end
 
   # A +com.icodici.crypto.PublicKey+ extension. As the key is immutable,
-  # caching is used to avoid innecessary UMI calls.
+  # caching is used to avoid unnecessary UMI calls.
   class PublicKey < RemoteAdapter
     remote_class 'com.icodici.crypto.PublicKey'
+
+    # Load key from packed, optinally, using the password
+    #
+    # @param [String] packed binary string with packed key
+    # @param [String] password optional password
+    def self.from_packed(packed, password: nil)
+      packed.force_encoding 'binary'
+      if password
+        invoke_static "unpackWithPassword", packed, password
+      else
+        PublicKey.new packed
+      end
+    end
+
+    # @return key strength in bits, e.g. 2048, 4096...
+    def bit_strength
+      getBitStrength()
+    end
 
     # @return [KeyAddress] short address
     def short_address
@@ -47,6 +76,65 @@ module Universa
     # @return [KeyAddress] long address
     def long_address
       @long_address ||= get_long_address()
+    end
+
+    # Check signature
+    #
+    # @param [String] data as binary or normal string
+    # @param [Object] signature as binary string
+    # @param [Object] hash_type to use (SHA256, SHA512, SHA3_384 and so on)
+    # @return true if it is ok
+    def verify(data, signature, hash_type = "SHA3_384")
+      __getobj__.verify(data.force_encoding('binary'), signature.force_encoding('binary'), hash_type)
+    end
+
+    # @param [String] data binary or usual data string
+    # @return [String] binary string with encrypted data
+    def encrypt(data)
+      __getobj__.encrypt(data.force_encoding('binary'))
+    end
+  end
+
+  # A +com.icodici.crypto.SymmetricKey+ extension. As the key is immutable,
+  # caching is used to avoid unnecessary UMI calls.
+  class SymmetricKey < RemoteAdapter
+    remote_class 'com.icodici.crypto.SymmetricKey'
+
+    # Derive key from password using PBKDF2 standard
+    # @param [String] password to derive key from
+    # @param [Object] rounds derivation rounds
+    # @param [Object] salt optional salt used to disallow detect password match by key match
+    # @return [SymmetricKey] instance
+    def self.from_password(password, rounds, salt = nil)
+      salt.force_encoding(Encoding::BINARY) if salt
+      invoke_static 'fromPassword', password, rounds, salt
+    end
+
+    # How many bits contains the key
+    # @return [Integer] size in bits
+    def size_in_bits
+      @bit_strength ||= getBitStrength()
+    end
+
+    # @return [Integer] size in bytes
+    def size
+      @size ||= getSize()
+    end
+
+    # Get the key as binary string
+    # @return [String] key bytes (binary string)
+    def key
+      @key ||= getKey()
+    end
+
+    # Encrypt data using EtA (HMAC)
+    def eta_encrypt(plaintext)
+      __getobj__.etaEncrypt(plaintext.force_encoding('binary'))
+    end
+
+    # Decrypt data using EtA (HMAC)
+    def eta_decrypt(plaintext)
+      __getobj__.eta_decrypt(plaintext.force_encoding('binary'))
     end
   end
 
@@ -71,10 +159,36 @@ module Universa
     # returns binary representation. It is not a string representation!
     # @return [String] binary string representation
     def packed
-      s = get_packed
-      s.force_encoding 'binary'
-      s
+      @packed ||= get_packed.force_encoding 'binary'
     end
+
+    # Compare KeyAddress with another KeyAddress or its string or even binary representation.
+    # Analyzes string length to select proper strategy.
+    def == other
+      if other.is_a?(KeyAddress)
+        super
+      elsif other.is_a?(String)
+        case other.size
+          when 37, 53
+            # it is for sure packed representation
+            packed == other
+          else
+            # is should be string representation then
+            to_s == other
+        end
+      else
+        false
+      end
+    end
+
+    def hash
+      to_s.hash
+    end
+
+    def eql?(other)
+      self == other
+    end
+
   end
 
 end

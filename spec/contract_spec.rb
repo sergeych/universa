@@ -15,6 +15,7 @@ describe Contract do
 
     c1 = Contract.from_packed(c.packed)
     c1.hash_id.should == c.hash_id
+    c1.should == c
     c1.expires_at.should > (Time.now + 120)
 
     c1.hash_id.should_not be_nil
@@ -143,7 +144,7 @@ describe Contract do
     # pending "UMI invoke_static bug"
     token = Service.umi.invoke_static "ContractsService", "createTokenContract",
                                       Set.new([@private_key]), Set.new([@private_key.public_key]),
-                                      BigDecimal.new(100000)
+                                      BigDecimal(100000)
     token.should_not be_nil
   end
 
@@ -164,6 +165,19 @@ describe Contract do
     id1.should == id2
     hash = {id1 => 17}
     hash[id2].should == 17
+  end
+
+  it "should easily compare HashId" do
+    c = Contract.create(@private_key)
+    c.seal()
+    id1 = c.hash_id
+    id2 = HashId.from_string(c.hash_id.to_s)
+
+    id1.should == id2
+    id1.should == id2.to_s
+    id1.should == id2.bytes
+    id2.bytes.should == id1
+    id2.to_s.should == id1
   end
 
   def create_coin(value, issuer_key:, owner: nil)
@@ -205,7 +219,18 @@ describe Contract do
     c
   end
 
-
+  it "properly serializes data in definition and state" do
+    c = Contract.create @private_key
+    d = Time.now
+    c.definition[:date1] = d
+    c.definition[:str1] = "foo"
+    c.state[:date2] = d
+    c.state[:str2] = "bar"
+    c.seal
+    c1 = Contract.from_packed(c.packed)
+    c1.definition.date1.should be_a(Time)
+    c1.state.date2.should be_a(Time)
+  end
 end
 
 class TestInit

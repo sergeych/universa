@@ -1,13 +1,16 @@
 # Universa
 
-> Alfa state: direct full access to Java API ready for test, started adapter of remote objects - syntax sugar 
+> beta state: direct full access to Java API ready for test, started adapter of remote objects - syntax sugar 
 for direct access to remote objects.
 
+__attention__ since this release version numbers match the Universa Core library version included. 
+
 This is an under-construction official gem from [Universa][universa] to facilitate access to the
-Java library using Universa's UMI protocol.  
+Java library using Universa's UMI protocol and Universa client services.
 
 ## News
 
+- rewritten Client and Connection to use new consensus-based, dns-free Universa network topology discovery protocol
 - added syntax sugar for TransactionPack
 - alfa version of the local FS-based contract store.
 - ability to edit `contract.state` and `contract.transactional` in new revisions.
@@ -63,15 +66,14 @@ puts "Contract id: #{contract.getId.toBase64String}"  #=> contract id: x9Ey+q...
 contract_id = contract.get_id.to_base64_string 
 
 ```
-
 ## Docs and resources
 
 for more information see:
 
-- [Universa gem page](https://kb.universablockchain.com /universa_ruby_gem/131) in the Universa Knowledge Base.
-- Universa Java API: https://kb.universablockchain.com /general_java_api/5 
-- Universa UMI server: https://kb.universablockchain.com /umi_protocol/98
-- Ruby [docs online](https://kb.universablockchain.com /system/static/gem_universa/)
+- [Universa gem page](https://kb.universablockchain.com/universa_ruby_gem/131) in the Universa Knowledge Base.
+- Universa Java API: https://kb.universablockchain.com/general_java_api/5 
+- Universa UMI server: https://kb.universablockchain.com/umi_protocol/98
+- Ruby [docs online](https://kb.universablockchain.com/system/static/gem_universa/)
 - Farcall [gem](https://github.com/sergeych/farcall) and [protocol](https://github.com/sergeych/farcall/wiki).
 
 ### Use UMI service (alfa state)
@@ -108,4 +110,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 Everyone interacting in the Universa project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/universa/blob/master/CODE_OF_CONDUCT.md).
 
-[universa]:http://universablockchain.com 
+[universa]:https://universablockchain.com
