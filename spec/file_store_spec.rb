@@ -1,3 +1,5 @@
+require 'tmpdir'
+
 include Universa
 
 include Universa::FSStore

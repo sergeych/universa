@@ -372,7 +372,7 @@ module Universa
   # Java classes, whose references are created on-the-fly automatically (and will be reclaimed by GC on both
   # ends soon).
   #
-  # == Instances are uniqie
+  # == Instances are unique
   #
   # What means, if some calls will return the same Java object instance, it will be returned as the same {Ref}
   # instance.

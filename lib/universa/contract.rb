@@ -58,6 +58,11 @@ module Universa
     remote_class "com.icodici.universa.contract.permissions.ChangeOwnerPermission"
   end
 
+  # Adapter for Universa ChangeRolePermission
+  class ChangeRolePermission < RemoteAdapter
+    remote_class "com.icodici.universa.contract.permissions.ChangeRolePermission"
+  end
+
   # Adapter for Universa RevokePermission
   class RevokePermission < RemoteAdapter
     remote_class "com.icodici.universa.contract.permissions.RevokePermission"
@@ -91,6 +96,10 @@ module Universa
   # adapter for a role that is a list of roles
   class ListRole < RemoteAdapter
     remote_class "com.icodici.universa.contract.roles.ListRole"
+
+    class Mode
+      ANY = 'ANY'
+    end
   end
 
   # Adapter for permission to modify data
@@ -98,6 +107,10 @@ module Universa
     remote_class "com.icodici.universa.contract.permissions.ModifyDataPermission"
   end
 
+  # Adapter for Universa QuorumVoteRole
+  class QuorumVoteRole < RemoteAdapter
+    remote_class "com.icodici.universa.contract.roles.QuorumVoteRole"
+  end
 
   # Wrapper for Java API Reference class
 

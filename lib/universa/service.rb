@@ -2,7 +2,7 @@ require 'singleton'
 
 module Universa
 
-  # The service is a singleton to provide porcess-wide objects and methods. For example,
+  # The service is a singleton to provide process-wide objects and methods. For example,
   # the {UMI} interface and reference class factory are unique per-process for Universa
   # library. It uses exactly one lazy created {UMI} connection which is shared among all threads.
   # As UMI server is multithreaded by nature, is will not block ruby threads waiting for remote
@@ -26,7 +26,8 @@ module Universa
       @known_proxies = {}
       [Contract, PrivateKey, PublicKey, KeyAddress, HashId, Binder,
        Role, SimpleRole, RoleLink, ListRole, Parcel, UnsContract,
-       ChangeOwnerPermission, RevokePermission, ModifyDataPermission,  SplitJoinPermission,
+       ChangeOwnerPermission, ChangeRolePermission, RevokePermission,
+       ModifyDataPermission,  SplitJoinPermission, QuorumVoteRole,
        UmiClient, Duration, Compound, KeyInfo, PBKDF2].each {|klass| register_proxy klass}
     end
 
@@ -128,7 +129,7 @@ module Universa
 
     # Updating proxied object is not allowed. Raises error.
     def __setobj__
-      raise "ObectProxy does not support changing referenced object"
+      raise "ObjectProxy does not support changing referenced object"
     end
 
     # Returns remote class name. There is no need to override it, when inheriting it use +remote_class+ helper:
@@ -139,11 +140,11 @@ module Universa
     #      #...
     #   end
     #
-    # Notice: remote_class will do allnecessary work for you.
+    # Notice: remote_class will do all necessary work for you.
     #
     # @return [String] remote class name
     def self.remote_class_name
-      @remote_class_name or raise Error, "provde remote class name"
+      @remote_class_name or raise Error, "provide remote class name"
     end
 
     # Registers remote class name to be used with this adapted. Call it early in descendant class
