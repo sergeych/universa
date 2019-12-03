@@ -29,6 +29,10 @@ module Universa
       __getobj__.keySet()
     end
 
+    def binary(key)
+      __getobj__.getBinary(key)
+    end
+
     # # Internal use only. Allow processing remote commands as local calls
     def respond_to_missing?(method_name, include_private = false)
       l = method_name[-1]
