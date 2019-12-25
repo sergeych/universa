@@ -421,4 +421,8 @@ module Universa
     end
   end
 
+  class ExtendedSignature < RemoteAdapter
+    remote_class "com.icodici.universa.contract.ExtendedSignature"
+  end
+
 end
