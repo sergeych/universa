@@ -42,6 +42,26 @@ Or install it yourself as:
 
 ## Usage
 
+### Direct access to Universa objects:
+
+~~~ruby
+    include Universa
+
+    @private_key = PrivateKey.new 2048
+    c = Contract.create @private_key
+    c.get_creator.get_all_addresses.should == [@private_key.long_address.to_s]
+    c.seal()
+    c.check() and c.trace_errors()
+    c.should be_ok
+
+    c1 = Contract.from_packed(c.packed)
+    c1.hash_id.should == c.hash_id
+    c1.should == c
+    c1.expires_at.should > (Time.now + 120)
+~~~
+
+see smaples in specs (spec/contract_spec, spec/compound_spec, etc.)
+
 ### Direct access to UMI 
  
 So far, you can only get direct access the the Java API functions. To get it:
