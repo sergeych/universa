@@ -1,15 +1,11 @@
 # Universa
 
-> beta state: direct full access to Java API ready for test, started adapter of remote objects - syntax sugar 
-for direct access to remote objects.
-
-__attention__ since this release version numbers match the Universa Core library version included. 
-
 This is an under-construction official gem from [Universa][universa] to facilitate access to the
 Java library using Universa's UMI protocol and Universa client services.
 
 ## News
 
+- production-tested in various universa projects
 - rewritten Client and Connection to use new consensus-based, dns-free Universa network topology discovery protocol
 - added syntax sugar for TransactionPack
 - alfa version of the local FS-based contract store.
