@@ -1,7 +1,7 @@
 # Universa
 
 This is an under-construction official gem from [Universa][universa] to facilitate access to the
-Java library using Universa's UMI protocol and Universa client services.
+Java library using Universa UMI protocol and Universa client services.
 
 ## News
 
