@@ -35,6 +35,15 @@ module Universa
     end
   end
 
+  # Safe58 allows human-friendly binary-to-characters codec. It automatically corrects recognition
+  # errors like 0 instead of 0 and 1 instead of I. The code does not use characters that look alike and
+  # uses only encglish letters and digits that also simplify select-copy-paste routine.
+  #
+  # important! arguments MUST be binary strings, so use
+  #
+  #     str.force_encoding('binary')
+  #
+  # as need, otherwise it will not work as expected.
   class Safe58 < RemoteAdapter
     remote_class "net.sergeych.utils.Safe58"
 
