@@ -1,4 +1,7 @@
+
 describe Client do
+  UMI::session_log_path = "./umisession.log"
+
   before :all do
     @test_access_key = begin
       PrivateKey.from_packed open(File.expand_path "~/.universa/test_access.private.unikey", 'rb').read
@@ -63,6 +66,7 @@ describe Client do
       contract = Contract.create @test_access_key
       contract.definition.name = "just a test"
       contract.expires_at = Time.now + 900
+      puts contract.expires_at
       contract.seal()
 
       state = @client.register_single contract

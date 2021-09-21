@@ -262,7 +262,7 @@ module Universa
     # @return [Contract] simple contact, not sealed
     def self.create issuer_key, expires_at: (Time.now + 90 * 24 * 60 * 60), use_short_address: false
       contract = Contract.new
-      contract.set_expires_at expires_at
+      contract.set_expires_at expires_at.utc
       contract.set_issuer_keys(use_short_address ? issuer_key.short_address : issuer_key.long_address)
       contract.register_role(contract.issuer.link_as("owner"))
       contract.register_role(contract.issuer.link_as("creator"))
@@ -342,7 +342,7 @@ module Universa
     # set +expires_at+ field
     # @param [Time] time when this contract will be expired, if yet +APPROVED+.
     def expires_at=(time)
-      set_expires_at time
+      set_expires_at time.utc
     end
 
     # @return definition data
