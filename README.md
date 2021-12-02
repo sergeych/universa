@@ -5,6 +5,13 @@ Java library using Universa UMI protocol and Universa client services.
 
 ## News
 
+- unikeys now show information about public keys too
+- unikeys now is capable to extract public keys and export
+  them as both univera binaries or universa text objects
+- support to pack universa text objects, see [kb on universa text objects](https://kb.universablockchain.com/text_format_for_universa_objects/311).
+
+## Old News :)
+
 - production-tested in various universa projects
 - rewritten Client and Connection to use new consensus-based, dns-free Universa network topology discovery protocol
 - added syntax sugar for TransactionPack
