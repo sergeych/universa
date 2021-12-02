@@ -12,6 +12,7 @@ require 'universa/stored_contract'
 require "universa/chain_store"
 require "universa/universa_helpers"
 require "universa/fs_store/file_store"
+require "universa/text_objects"
 
 # The Universa gem
 #
