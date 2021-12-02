@@ -183,7 +183,8 @@ class KeyTool
         @rounds < 100000 and error "To few rounds, use at least 100000"
       }
 
-      opts.on("-p FILE", "--public FILE", "extract public key") { |name|
+      opts.on("-p FILE", "--public FILE", "extract public key. If output file is not specified,",
+              "prints as universa text object to the standard output") { |name|
         task {
           key = load_key(name, true)
           if @output_file
