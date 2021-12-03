@@ -216,7 +216,7 @@ module Universa
 
   end
 
-  # The state of some contract reported by thee network. It is a convenience wrapper around Universa
+  # The state of some contract reported by the network. It is a convenience wrapper around Universa
   # ItemState structure.
   class ContractState
     def initialize(universa_contract_state)
