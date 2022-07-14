@@ -117,13 +117,14 @@ module Universa
               end
             rescue
               found_error = $!
-              result.try_set(false)
+              result.try_set(null)
             end
           end
         }
       }
+      r = result.value
       found_error != nil and raise found_error
-      result.value
+      r
     end
 
     # Register a single contract (on private network or if you have white key allowing free operations)
