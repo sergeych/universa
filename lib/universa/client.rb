@@ -117,7 +117,7 @@ module Universa
               end
             rescue
               found_error = $!
-              result.try_set(null)
+              result.try_set(nil)
             end
           end
         }
