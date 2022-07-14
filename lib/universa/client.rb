@@ -97,8 +97,9 @@ module Universa
     # @param [Contract | HashId] obj contract to check
     # @param [Object] trust level, should be between 0.1 (10% of network) and 0.9 (90% of the network)
     # @return [ContractState] of some final node check It does not calculates average time (yet)
+    # @raise Error if any of the queried nodes will cause an error.
     def get_state obj, trust: 0.3
-      raise ArgumentError, "trusst must be in 0.1..0.9 range" if trust < 0.1 || trust > 0.9
+      raise ArgumentError, "trust must be in 0.1..0.9 range" if trust < 0.1 || trust > 0.9
       result = Concurrent::IVar.new
       found_error = nil
       negative_votes = Concurrent::AtomicFixnum.new((size * 0.1).round + 1)

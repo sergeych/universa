@@ -5,6 +5,7 @@ Java library using Universa UMI protocol and Universa client services.
 
 ## News
 
+- fixed complex reference types integration
 - upgraded to new UMI (universa core is updated)
 - unikeys cli tool now show information about public keys too
 - unikeys extracts public keys and export as files or unversa text objects
