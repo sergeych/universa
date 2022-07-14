@@ -122,7 +122,7 @@ module Universa
           end
         }
       }
-      found_error != null and raise found_error
+      found_error != nil and raise found_error
       result.value
     end
 
