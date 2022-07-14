@@ -43,4 +43,16 @@ describe "keys" do
     expect(->{key.eta_decrypt(ciphertext+"+")}).to raise_error(Farcall::RemoteError, /HMAC/)
   end
 
+  require 'universa/dump'
+  it "produces compatibility vectors" do
+    key = SymmetricKey.new
+    plaintext = "false vaccine kills"
+    packedKey = Boss.pack(packedKey)
+    print "Key "
+    puts Base64.encode64(packedKey)
+    print "Encrypted "
+    puts Base64.encode64(key.eta_encrypt(plaintext))
+    print "-- done\n"
+  end
+
 end

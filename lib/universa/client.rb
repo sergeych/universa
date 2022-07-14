@@ -10,7 +10,6 @@ module Universa
     remote_class "com.icodici.universa.node2.network.Client"
   end
 
-
   # The universa network client. Discover and connects to the universa network, provides consensus operations
   # and all other whole-network related functions.
   class Client
@@ -42,9 +41,9 @@ module Universa
     # @raise if network topology could not be checked/obtained.
     def initialize topology: "mainnet", private_key: PrivateKey.new(2048), cache_dir: nil
       @client = UmiClient.new topology, cache_dir, private_key
-      @private_key = PrivateKey
+      @private_key = private_key
       @size = @client.size
-      @connections = (0...@size).map {nil}
+      @connections = (0...@size).map { nil }
     end
 
     # Get the node connection by its index (0...size).
@@ -64,7 +63,7 @@ module Universa
     # @param [Numeric] number of connections to get
     # @return [Array(Connection)] array of connections to random (non repeating) nodes
     def random_connections number
-      (0...size).to_a.sample(number).map {|n| self[n]}
+      (0...size).to_a.sample(number).map { |n| self[n] }
     end
 
     # Perform fast consensus state check with a given trust level, determining whether the item is approved or not.
@@ -90,32 +89,40 @@ module Universa
                 end
       @client.isApprovedByNetwork(hash_id, trust.to_f, 60000)
     end
-      # Perform fast consensus state check with a given trust level, as the fraction of the whole network size.
-      # It checks the network nodes randomly until get enough positive or negative states. The lover the required
-      # trust level is, the faster the answer will be found.
-      #
-      # @param [Contract | HashId] obj contract to check
-      # @param [Object] trust level, should be between 0.1 (10% of network) and 0.9 (90% of the network)
-      # @return [ContractState] of some final node check It does not calculates average time (yet)
-      def get_state obj, trust: 0.3
+
+    # Perform fast consensus state check with a given trust level, as the fraction of the whole network size.
+    # It checks the network nodes randomly until get enough positive or negative states. The lover the required
+    # trust level is, the faster the answer will be found.
+    #
+    # @param [Contract | HashId] obj contract to check
+    # @param [Object] trust level, should be between 0.1 (10% of network) and 0.9 (90% of the network)
+    # @return [ContractState] of some final node check It does not calculates average time (yet)
+    def get_state obj, trust: 0.3
       raise ArgumentError, "trusst must be in 0.1..0.9 range" if trust < 0.1 || trust > 0.9
       result = Concurrent::IVar.new
+      found_error = nil
       negative_votes = Concurrent::AtomicFixnum.new((size * 0.1).round + 1)
       positive_votes = Concurrent::AtomicFixnum.new((size * trust).round)
 
       # consensus-finding conveyor: we chek connections in batches in parallel until get
       # some consensus. We do not wait until all of them will answer
-      (0...size).to_a.shuffle.each {|index|
+      (0...size).to_a.shuffle.each { |index|
         Thread.start {
           if result.incomplete?
-            if (state = self[index].get_state(obj)).approved?
-              result.try_set(state) if positive_votes.decrement < 0
-            else
-              result.try_set(state) if negative_votes.decrement < 0
+            begin
+              if (state = self[index].get_state(obj)).approved?
+                result.try_set(state) if positive_votes.decrement < 0
+              else
+                result.try_set(state) if negative_votes.decrement < 0
+              end
+            rescue
+              found_error = $!
+              result.try_set(false)
             end
           end
         }
       }
+      found_error != null and raise found_error
       result.value
     end
 
@@ -139,7 +146,7 @@ module Universa
   # The connection to a single Universa node.
   class Connection
 
-    # Do not create it direcly, use {Client#random_connection}, {Client#random_connections} or {Client#[]} instead
+    # Do not create it directly, use {Client#random_connection}, {Client#random_connections} or {Client#[]} instead
     def initialize umi_client
       @client = umi_client
     end
