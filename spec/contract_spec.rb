@@ -4,6 +4,15 @@ describe Contract do
     @private_key = PrivateKey.new 2048
   end
 
+  it "assigns references" do
+    transfer = Contract.new()
+    can_play_parent_owner_ref = Reference.new(transfer)
+    can_play_parent_owner_ref.type = Universa::Reference::TYPE_TRANSACTIONAL
+    can_play_parent_owner_ref.name = "canplayparentowner"
+    can_play_parent_owner_ref.setConditions(Universa::Binder.of("all_of", ["this can_perform refParent.owner"]))
+
+  end
+
   it "creates contract with creator address" do
     c = Contract.create @private_key
     c.get_creator.get_all_addresses.should == [@private_key.long_address.to_s]
